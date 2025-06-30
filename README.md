@@ -6,11 +6,7 @@ A centralized web application to streamline student data collection, faculty-stu
 
 ## Core Functionalities
 
-1. **Google OAuth Authentication**
-
-   - Seamless login for Admin, Faculty, and Students.
-
-2. **Role-Based Dashboards**
+1. **Role-Based Dashboards**
 
    - **Admin**:
      - Add/manage faculty and student accounts.
@@ -30,16 +26,16 @@ A centralized web application to streamline student data collection, faculty-stu
      - Track submission statuses (Pending → Received → Approved/Rejected).
      - Read feedback and comments from Faculty and Admin.
 
-3. **Multi-Stage Approval Workflow**
+2. **Multi-Stage Approval Workflow**
 
    - Student submits data → Faculty review → Admin final approval.
    - Comprehensive audit trail with timestamps and comments.
 
-4. **Notifications & Tracking**
+3. **Notifications & Tracking**
 
    - Real-time dashboard indicators for pending tasks and approvals.
 
-5. **Data Management & Security**
+4. **Data Management & Security**
 
    - MySQL-backed relational database for structured storage.
    - Django’s built-in protections against common web vulnerabilities.
@@ -50,8 +46,8 @@ A centralized web application to streamline student data collection, faculty-stu
 
 - **Backend**: Python, Django
 - **Database**: MySQL
-- **Authentication**: Google OAuth2 (via `django-allauth`)
-- **Frontend**: Django templates (HTML, CSS, JavaScript) [Later on React will be used if required]
+- **Authentication**: JSON Web Tokens -> Google OAuth2 [Rree tier is limited to 100 user only by Google]
+- **Frontend**: Django templates -> React
 
 ---
 
@@ -84,7 +80,7 @@ A centralized web application to streamline student data collection, faculty-stu
    ```bash
    python manage.py runserver
    ```
-8. Visit `http://localhost:8000` and log in via Google.
+8. Visit `http://localhost:8000`.
 
 ---
 
@@ -95,12 +91,12 @@ A centralized web application to streamline student data collection, faculty-stu
 ├── requirements.txt               # Python dependencies
 ├── .env.example                   # Sample environment variables file
 ├── README.md                      # Project documentation
-├── monitoring_project/            # Root Django project folder
+├── university/                    # Root Django project folder
 │   ├── settings.py                # Project settings and configurations
 │   ├── urls.py                    # Root URL configuration (includes core_app.urls)
 │   ├── asgi.py                    # ASGI entry point for async deployment
 │   └── __init__.py
-└── core_app/                      # Main application logic
+└── monitoring_system/             # Main application logic
     ├── models.py                  # Database models for users, submissions, roles, etc.
     ├── views.py                   # Views for handling web requests
     ├── urls.py                    # URL routing specific to this app (included in project URLs)
@@ -109,9 +105,9 @@ A centralized web application to streamline student data collection, faculty-stu
 ```
 
 **Assumptions Explained:**
-- `monitoring_project/` is the root configuration directory created when starting a Django project. It handles global settings and routing.
-- `core_app/` is the main Django app containing the business logic, views, models, and templates specific to the student monitoring system.
-- `monitoring_project/urls.py` includes a route to `core_app/urls.py` so that URLs from the app are accessible via the main project.
+- `university/` is the root configuration directory created when starting a Django project. It handles global settings and routing.
+- `monitoring_system/` is the main Django app containing the business logic, views, models, and templates specific to the student monitoring system.
+- `university/urls.py` includes a route to `monitoring_system/urls.py` so that URLs from the app are accessible via the main project.
 - `asgi.py` is used instead of `wsgi.py` for compatibility with asynchronous features and modern deployment stacks (e.g., Daphne, Uvicorn).
 
 ---
