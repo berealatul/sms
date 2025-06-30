@@ -52,7 +52,7 @@ A centralized web application to streamline student data collection, faculty-stu
 ---
 
 ## Setup & Installation
-
+# Backend
 1. Clone the repo:
    ```bash
    git clone https://github.com/berealatul/studentMonitoringSystem.git
@@ -81,34 +81,6 @@ A centralized web application to streamline student data collection, faculty-stu
    python manage.py runserver
    ```
 8. Visit `http://localhost:8000`.
-
----
-
-## Repository Structure (To be restructured later on)
-
-```
-├── manage.py                      # Django management script
-├── requirements.txt               # Python dependencies
-├── .env.example                   # Sample environment variables file
-├── README.md                      # Project documentation
-├── university/                    # Root Django project folder
-│   ├── settings.py                # Project settings and configurations
-│   ├── urls.py                    # Root URL configuration (includes core_app.urls)
-│   ├── asgi.py                    # ASGI entry point for async deployment
-│   └── __init__.py
-└── monitoring_system/             # Main application logic
-    ├── models.py                  # Database models for users, submissions, roles, etc.
-    ├── views.py                   # Views for handling web requests
-    ├── urls.py                    # URL routing specific to this app (included in project URLs)
-    ├── templates/                 # HTML templates for the web UI
-    └── static/                    # Static files (CSS, JS, images)
-```
-
-**Assumptions Explained:**
-- `university/` is the root configuration directory created when starting a Django project. It handles global settings and routing.
-- `monitoring_system/` is the main Django app containing the business logic, views, models, and templates specific to the student monitoring system.
-- `university/urls.py` includes a route to `monitoring_system/urls.py` so that URLs from the app are accessible via the main project.
-- `asgi.py` is used instead of `wsgi.py` for compatibility with asynchronous features and modern deployment stacks (e.g., Daphne, Uvicorn).
 
 ---
 
