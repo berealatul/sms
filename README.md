@@ -1,99 +1,130 @@
-# Student Monitoring System
+# 🎓 Student Monitoring System
 
-A centralized web application to streamline student data collection, faculty-student interactions, and multi-level approval workflows in a university setting.
-
----
-
-## Core Functionalities
-
-1. **Role-Based Dashboards**
-
-   - **Admin**:
-     - Add/manage faculty and student accounts.
-     - Mark faculty as **NON\_WORKING** and trigger automatic reassignment alerts.
-     - Assign mentors, supervisors, and guides to each student.
-     - Request submissions or additional requirements from users and track their status.
-     - Final approval authority for all student data submissions.
-   - **Faculty**:
-     - View assigned students by role.
-     - Request missing documents or clarifications from students.
-     - Review submissions, comment, and request revisions.
-     - Approve or reject data, forwarding approved entries to Admin.
-     - Monitor student progress and provide ongoing feedback.
-   - **Student**:
-     - Upload and edit personal and academic details.
-     - View assigned mentors, supervisors, guides, and Admin contacts.
-     - Track submission statuses (Pending → Received → Approved/Rejected).
-     - Read feedback and comments from Faculty and Admin.
-
-2. **Multi-Stage Approval Workflow**
-
-   - Student submits data → Faculty review → Admin final approval.
-   - Comprehensive audit trail with timestamps and comments.
-
-3. **Notifications & Tracking**
-
-   - Real-time dashboard indicators for pending tasks and approvals.
-
-4. **Data Management & Security**
-
-   - MySQL-backed relational database for structured storage.
-   - Django’s built-in protections against common web vulnerabilities.
+A centralized, multi-tenant web application to streamline student data management, faculty-student workflows, and multi-stage approval systems across universities and departments.
 
 ---
 
-## Tech Stack
+## 🚀 Features
 
-- **Backend**: Python, Django
-- **Database**: MySQL
-- **Authentication**: JSON Web Tokens -> Google OAuth2 [Rree tier is limited to 100 user only by Google]
-- **Frontend**: Django templates -> React
+### 👤 Role-Based Dashboards
+- **Admin**
+  - Register faculty/students individually or via CSV
+  - Assign faculty as Mentors/Guides/Supervisors (custom titles)
+  - Track and approve student submissions by semester or student
+  - Create and manage DC/DRC members
+  - Monitor student progress and profile data
+- **Faculty**
+  - View assigned students
+  - Approve/Reject student submissions
+  - Request additional documents or revisions
+  - Provide feedback, monitor progress
+- **Student**
+  - Upload personal and academic data
+  - Track submission status and feedback
+  - View assigned mentors/supervisors and authority hierarchy
 
----
+### 🛠 Approval Workflow
+- Multi-stage:
+  - Student → Faculty → Admin
+- Approval trail with comments, timestamps, and roles
 
-## Setup & Installation
-# Backend
-1. Clone the repo:
-   ```bash
-   git clone https://github.com/berealatul/studentMonitoringSystem.git
-   cd studentMonitoringSystem
-   ```
-2. Create and activate a virtual environment:
-   ```bash
-   python3 -m venv venv && source venv/bin/activate
-   ```
-3. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-4. Configure environment variables in a `.env` file (see sample `.env.example`).
-5. Create MySQL database and run migrations:
-   ```bash
-   mysql -u root -p -e "CREATE DATABASE student_monitoring_db;"
-   python manage.py migrate
-   ```
-6. Create a superuser:
-   ```bash
-   python manage.py createsuperuser
-   ```
-7. Start the development server:
-   ```bash
-   python manage.py runserver
-   ```
-8. Visit `http://localhost:8000`.
+### 🧑‍💼 Dynamic Profile Fields
+- Admin can add new fields (e.g., "Profile Picture", "Research Area")
+- Supports custom data types: text, image, video, audio
 
----
+### 📂 Bulk Upload Support
+- Register faculty and students via CSV upload
+- Pre-assigned emails and initial passwords for first login
 
-## Contributing
+### 🌐 Multi-Tenant Architecture
+- Each organization (university) has its own database
+- Isolation of users, roles, and submissions per tenant
 
-1. Fork the repository.
-2. Create a feature branch: `git checkout -b feature/YourFeature`
-3. Commit your changes: `git commit -m "Add YourFeature"`
-4. Push to origin: `git push origin feature/YourFeature`
-5. Open a Pull Request.
+### 🔐 Secure Authentication & Password Reset
+- Role-based login
+- Reset system with security question
 
 ---
 
-## 📄 License
+## 🏗️ Tech Stack
 
-MIT License © Atul Prakash
+| Layer | Tech |
+|-------|------|
+| Backend | Django, Django REST Framework |
+| Database | PostgreSQL (per-tenant) |
+| Async Tasks | Celery + Redis |
+| Frontend | Django Templates (optionally React/HTMX) |
+| File Storage | Local / S3 (for uploads) |
+| Deployment | Docker, Gunicorn, Nginx |
+
+---
+
+## ⚙️ Setup Instructions
+
+### 1️⃣ Clone the Repo
+```bash
+git clone https://github.com/yourusername/student-monitoring-system.git
+cd student-monitoring-system
+```
+### 2️⃣ Create Virtual Environment
+```bash
+python -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+```
+### 3️⃣ Configure .env
+- Create a .env file and configure:
+```
+DEBUG=True
+SECRET_KEY=your_secret_key
+DATABASE_URL=postgres://user:pass@localhost/db
+REDIS_URL=redis://localhost:6379
+```
+### 4️⃣ Apply Migrations
+```bash
+python manage.py migrate
+```
+### 5️⃣ Run Server
+```bash
+python manage.py runserver
+```
+
+## 📁 Project Structure
+```bash
+monitoring_system/
+├── accounts/          # Registration, login, dynamic profiles
+├── admin_panel/       # Admin-level dashboards & tools
+├── faculty_portal/    # Faculty dashboards & actions
+├── student_portal/    # Student data entry & tracking
+├── submissions/       # Approval flow and audit trail
+├── assignments/       # Mentor/Guide/Supervisor logic
+├── tenant/            # Multi-tenant logic (using django-tenants)
+```
+
+## 📊 Example Use Case
+- University registers via /register/ → new tenant created
+
+- Admin logs in and adds faculty/students (single or CSV)
+
+- Students log in and fill personal/academic info
+
+- Faculty review, approve, or request changes
+
+- Admin gives final approval
+
+- All actions are tracked via audit trail
+
+## ✅ Future Roadmap
+- 📬 Notification system for pending actions
+
+- 📊 Analytics dashboard for admins
+
+- 📎 Chat or comment threads for review cycle
+
+- 📱 Mobile-friendly version / mobile app
+
+📃 License
+This project is licensed under the MIT License.
+
+🧑‍💻 Maintainers
+ATUL PRAKASH
