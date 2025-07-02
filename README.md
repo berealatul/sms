@@ -11,7 +11,7 @@ A centralized, multi-tenant web application to streamline student data managemen
   - Register faculty/students individually or via CSV
   - Assign faculty as Mentors/Guides/Supervisors (custom titles)
   - Track and approve student submissions by semester or student
-  - Create and manage DC/DRC members
+  - Create and manage committee members (DC/DRC/customName)
   - Monitor student progress and profile data
 - **Faculty**
   - View assigned students
