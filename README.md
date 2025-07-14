@@ -1,130 +1,63 @@
-# 🎓 Student Monitoring System
+# Student Monitoring App
 
-A centralized, multi-tenant web application to streamline student data management, faculty-student workflows, and multi-stage approval systems across universities and departments.
+## 🚀 Empowering Education: Streamlined Student & Faculty Management
 
----
-
-## 🚀 Features
-
-### 👤 Role-Based Dashboards
-- **Admin**
-  - Register faculty/students individually or via CSV
-  - Assign faculty as Mentors/Guides/Supervisors (custom titles)
-  - Track and approve student submissions by semester or student
-  - Create and manage committee members (DC/DRC/customName)
-  - Monitor student progress and profile data
-- **Faculty**
-  - View assigned students
-  - Approve/Reject student submissions
-  - Request additional documents or revisions
-  - Provide feedback, monitor progress
-- **Student**
-  - Upload personal and academic data
-  - Track submission status and feedback
-  - View assigned mentors/supervisors and authority hierarchy
-
-### 🛠 Approval Workflow
-- Multi-stage:
-  - Student → Faculty → Admin
-- Approval trail with comments, timestamps, and roles
-
-### 🧑‍💼 Dynamic Profile Fields
-- Admin can add new fields (e.g., "Profile Picture", "Research Area")
-- Supports custom data types: text, image, video, audio
-
-### 📂 Bulk Upload Support
-- Register faculty and students via CSV upload
-- Pre-assigned emails and initial passwords for first login
-
-### 🌐 Multi-Tenant Architecture
-- Each organization (university) has its own database
-- Isolation of users, roles, and submissions per tenant
-
-### 🔐 Secure Authentication & Password Reset
-- Role-based login
-- Reset system with security question
+The Student Monitoring App is a robust, admin-centric platform designed to revolutionize student data collection, management, and approval workflows within educational institutions. Built with a focus on security and efficiency, it provides a tailored experience for every user role, ensuring data integrity and seamless operations.
 
 ---
 
-## 🏗️ Tech Stack
+## 🌐 Live Demo
 
-| Layer | Tech |
-|-------|------|
-| Backend | Django, Django REST Framework |
-| Database | PostgreSQL (per-tenant) |
-| Async Tasks | Celery + Redis |
-| Frontend | Django Templates (optionally React/HTMX) |
-| File Storage | Local / S3 (for uploads) |
-| Deployment | Docker, Gunicorn, Nginx |
+Experience the application firsthand: [https://studentmonitoring.infy.uk/](https://studentmonitoring.infy.uk/)
+
+**Login Credentials:**
+
+* **Admin:**
+    * Email: `admin@example.com`
+    * Password: `adminpass`
+* **Faculty:**
+    * Email: `smith@example.com`
+    * Password: `facultypass`
+* **Student:**
+    * Email: `alice@example.com`
+    * Password: `studentpass`
 
 ---
 
-## ⚙️ Setup Instructions
+## ✨ Key Features
 
-### 1️⃣ Clone the Repo
-```bash
-git clone https://github.com/yourusername/student-monitoring-system.git
-cd student-monitoring-system
-```
-### 2️⃣ Create Virtual Environment
-```bash
-python -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-```
-### 3️⃣ Configure .env
-- Create a .env file and configure:
-```
-DEBUG=True
-SECRET_KEY=your_secret_key
-DATABASE_URL=postgres://user:pass@localhost/db
-REDIS_URL=redis://localhost:6379
-```
-### 4️⃣ Apply Migrations
-```bash
-python manage.py migrate
-```
-### 5️⃣ Run Server
-```bash
-python manage.py runserver
-```
+* **Exclusive Admin Control:** Only administrators can create new user accounts (Temp Admin, Faculty, Student), ensuring centralized and secure onboarding.
+* **Dynamic Role-Based Access Control (RBAC):** A sophisticated permission system ensures each user (Admin, Temp Admin, Faculty, Student) has access only to relevant data and functionalities, with roles dynamically managed from the database.
+* **Comprehensive Programme Management:** Admins can effortlessly add, view, edit, activate, and deactivate academic programmes, defining crucial details like credit requirements, academic years, and degree levels.
+* **Streamlined Batch Management:** Efficiently organize students by academic batches, linked directly to specific programmes.
+* **Flexible Faculty-Student Associations:** Define and manage multiple roles a faculty member can have with students (e.g., Mentor, Supervisor, Guide), facilitating personalized academic oversight.
+* **Secure & Automated User Provisioning:** Assign initial passwords based on their email for seamless setup.
+* **Robust Data Workflow:** Supports multi-step data verification and approval processes, ensuring accuracy and accountability for all student submissions.
+* **Modern UI/UX:** A clean, minimalist, and responsive design powered by Tailwind CSS, offering a delightful user experience across all devices.
 
-## 📁 Project Structure
-```bash
-monitoring_system/
-├── accounts/          # Registration, login, dynamic profiles
-├── admin_panel/       # Admin-level dashboards & tools
-├── faculty_portal/    # Faculty dashboards & actions
-├── student_portal/    # Student data entry & tracking
-├── submissions/       # Approval flow and audit trail
-├── assignments/       # Mentor/Guide/Supervisor logic
-├── tenant/            # Multi-tenant logic (using django-tenants)
-```
+---
 
-## 📊 Example Use Case
-- University registers via /register/ → new tenant created
+## 🛠️ Technologies Used
 
-- Admin logs in and adds faculty/students (single or CSV)
+* **Backend:** PHP
+* **Database:** MySQL
+* **Frontend:**
+    * HTML
+    * JavaScript
+    * Tailwind CSS (via CDN)
 
-- Students log in and fill personal/academic info
+---
 
-- Faculty review, approve, or request changes
+## 💡 Usage
 
-- Admin gives final approval
+1.  **Login:** Access the application and log in using the provided credentials for Admin, Faculty, or Student roles.
+2.  **Admin Dashboard:** As an Admin, explore the left sidebar for functionalities like:
+    * **Add User:** Create new user accounts for different roles.
+    * **Manage Programmes:** Add, edit, activate, or deactivate academic programmes.
 
-- All actions are tracked via audit trail
+---
 
-## ✅ Future Roadmap
-- 📬 Notification system for pending actions
+## 📄 License
 
-- 📊 Analytics dashboard for admins
+This project is open-source and available under the MIT License.
 
-- 📎 Chat or comment threads for review cycle
-
-- 📱 Mobile-friendly version / mobile app
-
-📃 License
-This project is licensed under the MIT License.
-
-🧑‍💻 Maintainers
-ATUL PRAKASH
