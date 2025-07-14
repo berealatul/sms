@@ -1,12 +1,11 @@
 <?php
 $pageTitle = "Admin Dashboard";
 require_once __DIR__ . '/includes/header.php'; // Handles session start and security checks
-
-// This page is protected by the header.php file.
 ?>
 
 <div class="relative min-h-screen lg:flex">
-    <div id="sidebar" class="bg-white w-64 absolute inset-y-0 left-0 transform -translate-x-full lg:relative lg:translate-x-0 transition-transform duration-200 ease-in-out z-20 shadow-md">
+    <!-- Sidebar -->
+    <div id="sidebar" class="bg-white w-64 absolute inset-y-0 left-0 transform -translate-x-full lg:relative lg:translate-x-0 transition-transform duration-200 ease-in-out z-30 shadow-md">
         <div class="p-4 border-b">
             <h1 class="text-xl font-bold text-indigo-600">Admin Panel</h1>
             <p class="text-sm text-gray-500">Welcome, <?php echo htmlspecialchars($_SESSION['user_name']); ?>!</p>
@@ -33,7 +32,11 @@ require_once __DIR__ . '/includes/header.php'; // Handles session start and secu
         </nav>
     </div>
 
-    <div class="flex-1 flex flex-col">
+    <!-- Sidebar Overlay -->
+    <div id="sidebar-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-20 hidden lg:hidden"></div>
+
+    <!-- Main Content: Added relative z-0 for stacking context -->
+    <div class="flex-1 flex flex-col relative z-0">
         <header class="flex justify-between items-center p-4 bg-white border-b lg:hidden">
             <button id="sidebar-toggle" class="text-gray-500 focus:outline-none">
                 <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -94,7 +97,6 @@ require_once __DIR__ . '/includes/header.php'; // Handles session start and secu
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="includes/sidebar_toggle_script.js"></script>
 <script>
-    // Chart.js Sample Data
     const ctx = document.getElementById('enrollmentChart').getContext('2d');
     new Chart(ctx, {
         type: 'line',
