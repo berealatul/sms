@@ -11,11 +11,17 @@ require_once __DIR__ . '/includes/header.php'; // Handles session start and secu
             <p class="text-sm text-gray-500">Welcome, <?php echo htmlspecialchars($_SESSION['user_name']); ?>!</p>
         </div>
         <nav class="mt-4">
-            <a href="#" class="flex items-center px-4 py-3 text-gray-700 bg-gray-200 font-bold">
+            <a href="/admin.php" class="flex items-center px-4 py-3 text-gray-700 bg-gray-200 font-bold">
                 <svg class="h-6 w-6 mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
                 </svg>
                 Dashboard
+            </a>
+            <a href="/admin/programmes.php" class="flex items-center px-4 py-3 text-gray-600 hover:bg-gray-200">
+                <svg class="h-6 w-6 mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v11.494m-9-5.747h18" />
+                </svg>
+                Programmes
             </a>
             <a href="#" class="flex items-center px-4 py-3 text-gray-600 hover:bg-gray-200">
                 <svg class="h-6 w-6 mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -23,7 +29,7 @@ require_once __DIR__ . '/includes/header.php'; // Handles session start and secu
                 </svg>
                 Users
             </a>
-            <a href="process_auth.php?logout=1" class="flex items-center px-4 py-3 text-gray-600 hover:bg-gray-200 mt-8">
+            <a href="/process_auth.php?logout=1" class="flex items-center px-4 py-3 text-gray-600 hover:bg-gray-200 mt-8">
                 <svg class="h-6 w-6 mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" />
                 </svg>
@@ -35,7 +41,7 @@ require_once __DIR__ . '/includes/header.php'; // Handles session start and secu
     <!-- Sidebar Overlay -->
     <div id="sidebar-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-20 hidden lg:hidden"></div>
 
-    <!-- Main Content: Added relative z-0 for stacking context -->
+    <!-- Main Content -->
     <div class="flex-1 flex flex-col relative z-0">
         <header class="flex justify-between items-center p-4 bg-white border-b lg:hidden">
             <button id="sidebar-toggle" class="text-gray-500 focus:outline-none">
@@ -95,7 +101,7 @@ require_once __DIR__ . '/includes/header.php'; // Handles session start and secu
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="includes/sidebar_toggle_script.js"></script>
+<script src="/includes/sidebar_toggle_script.js"></script>
 <script>
     const ctx = document.getElementById('enrollmentChart').getContext('2d');
     new Chart(ctx, {
