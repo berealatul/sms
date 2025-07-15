@@ -53,12 +53,13 @@ CREATE TABLE IF NOT EXISTS `programmes` (
 -- Table for batches
 CREATE TABLE IF NOT EXISTS `batches` (
     `id` INT AUTO_INCREMENT PRIMARY KEY,
-    `name` VARCHAR(100) UNIQUE NOT NULL,
+    `name` VARCHAR(100) NOT NULL,
     `programme_id` INT NOT NULL,
     `is_active` BOOLEAN DEFAULT TRUE,
     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (`programme_id`) REFERENCES `programmes`(`id`)
+    UNIQUE (`programme_id`, `name`) -- added new line how to update table
 );
 
 -- Table for user authentication
