@@ -124,7 +124,6 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
 </div>
 
 <!-- Add/Edit Modals and JS -->
-<!-- ... (The rest of the file remains the same) ... -->
 <div id="add-modal" class="fixed z-50 inset-0 overflow-y-auto hidden">
     <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
         <div class="fixed inset-0 transition-opacity" aria-hidden="true">
@@ -209,7 +208,7 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
                             </div>
                             <div>
                                 <label for="edit_maximum_year" class="block text-sm font-medium text-gray-700">Maximum Years</label>
-                                <input type="number" name="maximum_year" id="add_maximum_year" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                                <input type="number" name="maximum_year" id="edit_maximum_year" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
                             </div>
                         </div>
                     </div>
