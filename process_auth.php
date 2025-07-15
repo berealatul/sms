@@ -1,5 +1,4 @@
 <?php
-// process_auth.php
 session_set_cookie_params([
     'lifetime' => 3600,
     'path' => '/',
@@ -74,19 +73,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['user_role_name'] = getRoleNameById($conn, $user['user_type_id']);
             $_SESSION['login_time'] = time();
 
-            // --- Corrected Redirect Logic ---
             switch ($_SESSION['user_role_name']) {
                 case 'admin':
                     header('Location: /admin/');
+                    break;
+                case 'staff':
+                    header('Location: /staff/');
                     break;
                 case 'faculty':
                     header('Location: /faculty/');
                     break;
                 case 'student':
                     header('Location: /student/');
-                    break;
-                case 'staff':
-                    header('Location: /staff/');
                     break;
                 default:
                     session_unset();
