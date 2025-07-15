@@ -128,7 +128,7 @@ CREATE TABLE IF NOT EXISTS `faculty_student_associations` (
 -- Initial Data Inserts
 INSERT INTO `user_types` (`name`, `description`) VALUES
 ('admin', 'Head of Department or System Administrator'),
-('temp_admin', 'Temporary Administrator with limited access'),
+('staff', 'Temporary Administrator with limited access'),
 ('faculty', 'Faculty member with student association'),
 ('student', 'Enrolled student');
 
