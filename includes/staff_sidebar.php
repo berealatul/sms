@@ -19,11 +19,11 @@ $activePage = $activePage ?? '';
             </svg>
             Batches
         </a>
-        <a href="#" class="flex items-center px-4 py-3 text-gray-600 hover:bg-gray-200">
+        <a href="/admin/students/" class="flex items-center px-4 py-3 <?php echo ($activePage === 'students') ? 'text-gray-700 bg-gray-200 font-bold' : 'text-gray-600 hover:bg-gray-200'; ?>">
             <svg class="h-6 w-6 mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
             </svg>
-            Manage Tasks
+            Students
         </a>
         <a href="/process_auth.php?logout=1" class="flex items-center px-4 py-3 text-gray-600 hover:bg-gray-200 mt-8">
             <svg class="h-6 w-6 mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
