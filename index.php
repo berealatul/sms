@@ -12,9 +12,28 @@ session_set_cookie_params([
 ]);
 session_start();
 
-// --- Redirect if already logged in ---
-if (isset($_SESSION['user_id'])) {
-    header('Location: admin.php');
+                // --- Redirect if already logged in (Corrected Logic) ---
+                if (isset($_SESSION['user_id']) && isset($_SESSION['user_role_name'])) {
+                    switch ($_SESSION['user_role_name']) {
+                        case 'admin':
+                            header('Location: /admin/');
+                            break;
+                        case 'faculty':
+                            header('Location: /faculty/');
+                            break;
+                        case 'student':
+                            header('Location: /student/');
+                            break;
+                        case 'staff':
+                            header('Location: /staff/');
+                            break;
+                        default:
+                            // If role is unknown, destroy session and stay on login page
+                            session_unset();
+                            session_destroy();
+                            header('Location: /index.php');
+                            break;
+                    }
     exit();
 }
 
