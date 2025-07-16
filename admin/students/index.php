@@ -10,7 +10,7 @@ if (!isset($_SESSION['user_role_name']) || !in_array($_SESSION['user_role_name']
 }
 
 // --- Pagination and Search Logic ---
-define('STUDENTS_PER_PAGE', 50);
+define('STUDENTS_PER_PAGE', 10);
 $page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int)$_GET['page'] : 1;
 $offset = ($page - 1) * STUDENTS_PER_PAGE;
 $search_query = $_GET['search'] ?? '';
@@ -109,6 +109,7 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
                 <div class="flex gap-2 w-full md:w-auto">
                     <button id="add-student-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg w-full md:w-auto">Add Student</button>
                     <button id="upload-csv-btn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg w-full md:w-auto">Upload CSV</button>
+                    <button id="archive-batch-btn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg w-full md:w-auto">Archive/Delete</button>
                 </div>
             </div>
 
@@ -142,7 +143,7 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
                                     <td class="px-6 py-4 whitespace-nowrap"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full <?php echo $student['is_active'] ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'; ?>"><?php echo $student['is_active'] ? 'Active' : 'Inactive'; ?></span></td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                         <button class="text-indigo-600 hover:text-indigo-900 edit-btn" data-id="<?php echo $student['id']; ?>" data-name="<?php echo htmlspecialchars($student['name']); ?>" data-email="<?php echo htmlspecialchars($student['email']); ?>" data-roll="<?php echo htmlspecialchars($student['roll_number'] ?? ''); ?>" data-programme-id="<?php echo $student['programme_id']; ?>" data-batch-id="<?php echo $student['batch_id']; ?>">Edit</button>
-                                        <a href="/admin/students/process.php?action=reset_password&id=<?php echo $student['id']; ?>" class="ml-4 text-blue-600 hover:text-blue-900" onclick="return confirm('Are you sure you want to reset the password for this student? The new password will be their email address.');">Reset Pass</a>
+                                        <a href="/admin/students/process.php?action=reset_password&id=<?php echo $student['id']; ?>" class="ml-4 text-blue-600 hover:text-blue-900" onclick="return confirm('Are you sure you want to reset the password for this student? The new password will be their email address.');">ResetPassword</a>
                                     </td>
                                 </tr>
                             <?php endwhile; ?>
@@ -229,6 +230,54 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
     </div>
 </div>
 
+<div id="archive-modal" class="fixed z-50 inset-0 overflow-y-auto hidden">
+    <div class="flex items-center justify-center min-h-screen">
+        <div class="fixed inset-0 bg-gray-500 opacity-75"></div>
+        <div class="bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:max-w-lg sm:w-full">
+            <form action="/admin/students/process.php" method="POST" onsubmit="return confirm('Are you sure? This action cannot be undone.');">
+                <input type="hidden" name="action" value="archive_batch">
+                <div class="bg-white px-4 pt-5 pb-4 sm:p-6">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Archive/Delete Students by Batch</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label for="archive_programme_id" class="block text-sm font-medium">Programme</label>
+                            <select name="programme_id" id="archive_programme_id" required class="mt-1 block w-full p-2 border rounded-md">
+                                <option value="">Select Programme</option>
+                                <?php foreach ($programmes as $p): ?>
+                                    <option value="<?php echo $p['id']; ?>"><?php echo htmlspecialchars($p['name']); ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="archive_batch_id" class="block text-sm font-medium">Batch</label>
+                            <select name="batch_id" id="archive_batch_id" required class="mt-1 block w-full p-2 border rounded-md">
+                                <option value="">Select Programme First</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium">Action</label>
+                            <div class="mt-2 space-y-2">
+                                <div class="flex items-center">
+                                    <input id="action_deactivate" name="archive_action" type="radio" value="deactivate" required class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300">
+                                    <label for="action_deactivate" class="ml-3 block text-sm font-medium text-gray-700">Deactivate Students (Prevent Login)</label>
+                                </div>
+                                <div class="flex items-center">
+                                    <input id="action_delete" name="archive_action" type="radio" value="delete" required class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300">
+                                    <label for="action_delete" class="ml-3 block text-sm font-medium text-gray-700">Permanently Delete Students</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse">
+                    <button type="submit" class="w-full sm:w-auto sm:ml-3 px-4 py-2 bg-red-600 text-white rounded-md">Confirm</button>
+                    <button type="button" id="archive-cancel-btn" class="w-full sm:w-auto mt-3 sm:mt-0 px-4 py-2 bg-white border rounded-md">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <script src="/includes/sidebar_toggle_script.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -238,12 +287,17 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
         const addModal = document.getElementById('add-modal');
         const editModal = document.getElementById('edit-modal');
         const uploadCsvModal = document.getElementById('upload-csv-modal');
+        const archiveModal = document.getElementById('archive-modal'); // New modal
 
         document.getElementById('add-student-btn').addEventListener('click', () => addModal.classList.remove('hidden'));
         document.getElementById('add-cancel-btn').addEventListener('click', () => addModal.classList.add('hidden'));
 
         document.getElementById('upload-csv-btn').addEventListener('click', () => uploadCsvModal.classList.remove('hidden'));
         document.getElementById('upload-csv-cancel-btn').addEventListener('click', () => uploadCsvModal.classList.add('hidden'));
+
+        document.getElementById('archive-batch-btn').addEventListener('click', () => archiveModal.classList.remove('hidden'));
+        document.getElementById('archive-cancel-btn').addEventListener('click', () => archiveModal.classList.add('hidden'));
+
 
         document.getElementById('edit-cancel-btn').addEventListener('click', () => editModal.classList.add('hidden'));
         document.querySelectorAll('.edit-btn').forEach(btn => {
@@ -264,7 +318,7 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
         // --- Dynamic Batch Dropdowns ---
         function updateBatchDropdown(batchSelectId, programmeId, selectedBatchId = null) {
             const batchSelect = document.getElementById(batchSelectId);
-            batchSelect.innerHTML = ''; // Clear existing options
+            batchSelect.innerHTML = '<option value="">Select Batch</option>'; // Clear existing options and add a default
 
             const filteredBatches = batches.filter(b => b.programme_id == programmeId);
             filteredBatches.forEach(batch => {
@@ -287,10 +341,14 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
         document.getElementById('csv_programme_id').addEventListener('change', function() {
             updateBatchDropdown('csv_batch_id', this.value);
         });
+        document.getElementById('archive_programme_id').addEventListener('change', function() {
+            updateBatchDropdown('archive_batch_id', this.value);
+        });
 
         // Initialize dropdowns
         updateBatchDropdown('add_batch_id', document.getElementById('add_programme_id').value);
         updateBatchDropdown('csv_batch_id', document.getElementById('csv_programme_id').value);
+        // No need to initialize the archive dropdowns until a programme is selected
     });
 </script>
 

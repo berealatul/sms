@@ -131,6 +131,50 @@ try {
         }
         fclose($handle);
         $_SESSION['success_message'] = "$count students uploaded successfully.";
+    } elseif ($action === 'archive_batch') {
+        if ($_SESSION['user_role_name'] !== 'admin') {
+            throw new Exception("You are not authorized to perform this action.");
+        }
+        $programme_id = filter_input(INPUT_POST, 'programme_id', FILTER_VALIDATE_INT);
+        $batch_id = filter_input(INPUT_POST, 'batch_id', FILTER_VALIDATE_INT);
+        $archive_action = $_POST['archive_action'] ?? '';
+
+        if (!$programme_id || !$batch_id || !in_array($archive_action, ['deactivate', 'delete'])) {
+            throw new Exception("Invalid input for archiving.");
+        }
+
+        // Get all student user IDs in the batch
+        $stmt_get_users = $conn->prepare("SELECT user_id FROM students WHERE programme_id = ? AND batch_id = ?");
+        $stmt_get_users->bind_param("ii", $programme_id, $batch_id);
+        $stmt_get_users->execute();
+        $result = $stmt_get_users->get_result();
+        $user_ids = [];
+        while ($row = $result->fetch_assoc()) {
+            $user_ids[] = $row['user_id'];
+        }
+        $stmt_get_users->close();
+
+        if (empty($user_ids)) {
+            throw new Exception("No students found in the selected batch.");
+        }
+
+        $placeholders = implode(',', array_fill(0, count($user_ids), '?'));
+        $types = str_repeat('i', count($user_ids));
+
+        if ($archive_action === 'deactivate') {
+            $stmt_deactivate = $conn->prepare("UPDATE users SET is_active = 0 WHERE id IN ($placeholders)");
+            $stmt_deactivate->bind_param($types, ...$user_ids);
+            $stmt_deactivate->execute();
+            $stmt_deactivate->close();
+            $_SESSION['success_message'] = count($user_ids) . " students have been deactivated.";
+        } elseif ($archive_action === 'delete') {
+            // Deleting from the `users` table will cascade to `students`
+            $stmt_delete = $conn->prepare("DELETE FROM users WHERE id IN ($placeholders)");
+            $stmt_delete->bind_param($types, ...$user_ids);
+            $stmt_delete->execute();
+            $stmt_delete->close();
+            $_SESSION['success_message'] = count($user_ids) . " students have been permanently deleted.";
+        }
     }
 
     $conn->commit();
