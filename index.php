@@ -1,39 +1,29 @@
 <?php
 $pageTitle = "Login - Student Monitoring";
+require_once __DIR__ . '/config/db.php';
 
-// --- Session Security ---
-session_set_cookie_params([
-    'lifetime' => 3600,
-    'path' => '/',
-    'domain' => 'studentmonitoring.com',
-    'secure' => false, // Set to true for HTTPS
-    'httponly' => true,
-    'samesite' => 'Lax'
-]);
-session_start();
-
-                // --- Redirect if already logged in (Corrected Logic) ---
-                if (isset($_SESSION['user_id']) && isset($_SESSION['user_role_name'])) {
-                    switch ($_SESSION['user_role_name']) {
-                        case 'admin':
-                            header('Location: /admin/');
-                            break;
-                        case 'faculty':
-                            header('Location: /faculty/');
-                            break;
-                        case 'student':
-                            header('Location: /student/');
-                            break;
-                        case 'staff':
-                            header('Location: /staff/');
-                            break;
-                        default:
-                            // If role is unknown, destroy session and stay on login page
-                            session_unset();
-                            session_destroy();
-                            header('Location: /index.php');
-                            break;
-                    }
+// Redirect if already logged in (Corrected Logic)
+if (isset($_SESSION['user_id']) && isset($_SESSION['user_role_name'])) {
+    switch ($_SESSION['user_role_name']) {
+        case 'admin':
+            header('Location: /admin/');
+            break;
+        case 'faculty':
+            header('Location: /faculty/');
+            break;
+        case 'student':
+            header('Location: /student/');
+            break;
+        case 'staff':
+            header('Location: /staff/');
+            break;
+        default:
+            // If role is unknown, destroy session and stay on login page
+            session_unset();
+            session_destroy();
+            header('Location: /index.php');
+            break;
+    }
     exit();
 }
 

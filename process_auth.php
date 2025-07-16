@@ -1,14 +1,4 @@
 <?php
-session_set_cookie_params([
-    'lifetime' => 3600,
-    'path' => '/',
-    'domain' => 'studentmonitoring.com',
-    'secure' => false,
-    'httponly' => true,
-    'samesite' => 'Lax'
-]);
-session_start();
-
 require_once __DIR__ . '/config/db.php';
 
 function getRoleNameById($conn, $user_type_id)
