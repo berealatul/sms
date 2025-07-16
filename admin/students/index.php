@@ -142,8 +142,15 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><?php echo htmlspecialchars($student['programme_name'] ?? 'N/A'); ?></td>
                                     <td class="px-6 py-4 whitespace-nowrap"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full <?php echo $student['is_active'] ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'; ?>"><?php echo $student['is_active'] ? 'Active' : 'Inactive'; ?></span></td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                        <button class="text-indigo-600 hover:text-indigo-900 edit-btn" data-id="<?php echo $student['id']; ?>" data-name="<?php echo htmlspecialchars($student['name']); ?>" data-email="<?php echo htmlspecialchars($student['email']); ?>" data-roll="<?php echo htmlspecialchars($student['roll_number'] ?? ''); ?>" data-programme-id="<?php echo $student['programme_id']; ?>" data-batch-id="<?php echo $student['batch_id']; ?>">Edit</button>
-                                        <a href="/admin/students/process.php?action=reset_password&id=<?php echo $student['id']; ?>" class="ml-4 text-blue-600 hover:text-blue-900" onclick="return confirm('Are you sure you want to reset the password for this student? The new password will be their email address.');">ResetPassword</a>
+                                        <button class="text-indigo-600 hover:text-indigo-900 edit-btn"
+                                            data-id="<?php echo $student['id']; ?>"
+                                            data-name="<?php echo htmlspecialchars($student['name']); ?>"
+                                            data-email="<?php echo htmlspecialchars($student['email']); ?>"
+                                            data-roll="<?php echo htmlspecialchars($student['roll_number'] ?? ''); ?>"
+                                            data-programme-id="<?php echo $student['programme_id']; ?>"
+                                            data-batch-id="<?php echo $student['batch_id']; ?>"
+                                            data-is-active="<?php echo $student['is_active']; ?>">Edit</button>
+                                        <a href="/admin/students/process.php?action=reset_password&id=<?php echo $student['id']; ?>" class="ml-4 text-blue-600 hover:text-blue-900" onclick="return confirm('The new password will be their email address(all in small letters).');">ResetPassword</a>
                                     </td>
                                 </tr>
                             <?php endwhile; ?>
@@ -202,6 +209,15 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
                         <div><label for="edit_roll_number" class="block text-sm font-medium">Roll Number</label><input type="text" name="roll_number" id="edit_roll_number" required class="mt-1 block w-full p-2 border rounded-md"></div>
                         <div><label for="edit_programme_id" class="block text-sm font-medium">Programme</label><select name="programme_id" id="edit_programme_id" required class="mt-1 block w-full p-2 border rounded-md"><?php foreach ($programmes as $p): ?><option value="<?php echo $p['id']; ?>"><?php echo htmlspecialchars($p['name']); ?></option><?php endforeach; ?></select></div>
                         <div><label for="edit_batch_id" class="block text-sm font-medium">Batch</label><select name="batch_id" id="edit_batch_id" required class="mt-1 block w-full p-2 border rounded-md"></select></div>
+
+                        <div>
+                            <label for="edit_is_active" class="block text-sm font-medium">Status</label>
+                            <select name="is_active" id="edit_is_active" required class="mt-1 block w-full p-2 border rounded-md">
+                                <option value="1">Active</option>
+                                <option value="0">Inactive</option>
+                            </select>
+                        </div>
+
                     </div>
                 </div>
                 <div class="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse"><button type="submit" class="w-full sm:w-auto sm:ml-3 px-4 py-2 bg-indigo-600 text-white rounded-md">Update</button><button type="button" id="edit-cancel-btn" class="w-full sm:w-auto mt-3 sm:mt-0 px-4 py-2 bg-white border rounded-md">Cancel</button></div>
@@ -306,6 +322,7 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
                 document.getElementById('edit_name').value = btn.dataset.name;
                 document.getElementById('edit_email').value = btn.dataset.email;
                 document.getElementById('edit_roll_number').value = btn.dataset.roll;
+                document.getElementById('edit_is_active').value = btn.dataset.isActive; // Add this line
 
                 const programmeId = btn.dataset.programmeId;
                 document.getElementById('edit_programme_id').value = programmeId;

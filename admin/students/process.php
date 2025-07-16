@@ -60,16 +60,19 @@ try {
         $roll_number = trim($_POST['roll_number']);
         $programme_id = filter_input(INPUT_POST, 'programme_id', FILTER_VALIDATE_INT);
         $batch_id = filter_input(INPUT_POST, 'batch_id', FILTER_VALIDATE_INT);
+        $is_active = filter_input(INPUT_POST, 'is_active', FILTER_VALIDATE_INT); // Get the new status
 
-        if (!$user_id || !$name || !$email || !$roll_number || !$programme_id || !$batch_id) throw new Exception("All fields are required for editing.");
+        if (!$user_id || !$name || !$email || !$roll_number || !$programme_id || !$batch_id || !in_array($is_active, [0, 1])) { // Add validation
+            throw new Exception("All fields are required for editing.");
+        }
 
         // Update users table
-        $stmt_user = $conn->prepare("UPDATE users SET name = ?, email = ? WHERE id = ?");
-        $stmt_user->bind_param("ssi", $name, $email, $user_id);
+        $stmt_user = $conn->prepare("UPDATE users SET name = ?, email = ?, is_active = ? WHERE id = ?"); // Add is_active
+        $stmt_user->bind_param("ssii", $name, $email, $is_active, $user_id); // Update binding
         $stmt_user->execute();
         $stmt_user->close();
 
-        // Update students table
+        // Update students table (this part remains the same)
         $stmt_student = $conn->prepare("UPDATE students SET roll_number = ?, programme_id = ?, batch_id = ? WHERE user_id = ?");
         $stmt_student->bind_param("siii", $roll_number, $programme_id, $batch_id, $user_id);
         $stmt_student->execute();
@@ -87,14 +90,14 @@ try {
         $stmt_get->close();
 
         if (!$user) throw new Exception("User not found.");
-
+        $new_plaintext_password = strtolower($user['email']);
         $new_password = password_hash($user['email'], PASSWORD_DEFAULT);
         $stmt_reset = $conn->prepare("UPDATE users SET password = ? WHERE id = ?");
         $stmt_reset->bind_param("si", $new_password, $user_id);
         $stmt_reset->execute();
         $stmt_reset->close();
 
-        $_SESSION['success_message'] = "Password has been reset to the user's email address.";
+        $_SESSION['success_message'] = "Password has been reset to the user's email address(all in small letters).";
     } elseif ($action === 'upload_csv' && isset($_FILES['csv_file'])) {
         $programme_id = filter_input(INPUT_POST, 'programme_id', FILTER_VALIDATE_INT);
         $batch_id = filter_input(INPUT_POST, 'batch_id', FILTER_VALIDATE_INT);
@@ -115,8 +118,8 @@ try {
 
             if (!$name || !$roll_number || !$email) continue; // Skip invalid rows
 
-            $hashed_password = password_hash($email, PASSWORD_DEFAULT);
-
+            $new_plaintext_password = strtolower($email);
+            $hashed_password = password_hash($new_plaintext_password, PASSWORD_DEFAULT);
             $stmt_user = $conn->prepare("INSERT INTO users (name, email, password, user_type_id) VALUES (?, ?, ?, ?)");
             $stmt_user->bind_param("sssi", $name, $email, $hashed_password, $student_role_id);
             $stmt_user->execute();
