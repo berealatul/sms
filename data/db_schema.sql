@@ -99,6 +99,7 @@ CREATE TABLE IF NOT EXISTS `faculty` (
     `id` INT AUTO_INCREMENT PRIMARY KEY,
     `user_id` INT UNIQUE NOT NULL,
     `phone_number` VARCHAR(20) UNIQUE NULL,
+    `specialization` VARCHAR(255) NULL,
     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
@@ -129,8 +130,8 @@ CREATE TABLE IF NOT EXISTS `faculty_student_associations` (
 -- Initial Data Inserts
 INSERT INTO `user_types` (`name`, `description`) VALUES
 ('admin', 'Head of Department or System Administrator'),
-('staff', 'Temporary Administrator with limited access'),
-('faculty', 'Faculty member with student association'),
+('staff', 'Technical Officer'),
+('faculty', 'Faculty Member'),
 ('student', 'Enrolled student');
 
 -- Insert initial degree levels
