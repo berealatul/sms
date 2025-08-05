@@ -56,7 +56,6 @@ unset($_SESSION['errors'], $_SESSION['success_message']);
             <?php if ($success_message): ?>
                 <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded-md">
                     <p><?php echo htmlspecialchars($success_message); ?></p>
-                    <a href="/superadmin/index.php" class="font-bold hover:underline">Click here to login.</a>
                 </div>
             <?php endif; ?>
 

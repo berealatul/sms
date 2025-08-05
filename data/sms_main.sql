@@ -31,9 +31,6 @@ CREATE TABLE `users` (
   CONSTRAINT `users_ibfk_1` FOREIGN KEY (`role_id`) REFERENCES `roles` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-INSERT INTO `users` (`name`, `email`, `password`, `role_id`) VALUES
-('Main Administrator', 'superadmin@example.com', '$2y$10$qnxKADue821zYLcaEArKguvITHPf1G/P5nwDd81QAUVo4Fk16/Id2', 1);
-
 CREATE TABLE `departments` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `department_name` varchar(255) NOT NULL,

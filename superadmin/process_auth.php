@@ -55,10 +55,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             session_regenerate_id(true);
 
             // Set session variables
+            $_SESSION['initiated'] = true; // <-- PREVENT THE DOUBLE REGENERATION
             $_SESSION['user_id'] = $user['id'];
             $_SESSION['user_name'] = $user['name'];
             $_SESSION['user_role_name'] = $user['role_name'];
             $_SESSION['login_time'] = time();
+
+            // Explicitly save the session before redirecting
+            session_write_close();
 
             // Redirect to the dashboard
             header('Location: /superadmin/dashboard.php');
