@@ -1,47 +1,38 @@
 DROP DATABASE IF EXISTS sms_main;
 CREATE DATABASE sms_main;
-
 USE sms_main;
 
-CREATE TABLE `roles` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `name` varchar(50) NOT NULL,
+-- Stores all departments managed by the administration.
+CREATE TABLE `departments` (
+  `id` INT(11) NOT NULL AUTO_INCREMENT,
+  `name` VARCHAR(255) NOT NULL,
+  `code` VARCHAR(50) NOT NULL,
+  `is_active` TINYINT(1) NOT NULL DEFAULT 1,
+  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP(),
   PRIMARY KEY (`id`),
-  UNIQUE KEY `name` (`name`)
+  UNIQUE KEY `code` (`code`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-INSERT INTO `roles` (`id`, `name`) VALUES
-(1, 'superadmin'),
-(2, 'hod'),
-(3, 'faculty'),
-(4, 'student'),
-(5, 'staff');
-
+-- Stores all users for the entire system: administrators, HODs, faculty, etc.
 CREATE TABLE `users` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `name` varchar(100) NOT NULL,
-  `email` varchar(100) NOT NULL,
-  `password` varchar(255) NOT NULL,
-  `role_id` int(11) NOT NULL,
-  `is_active` tinyint(1) NOT NULL DEFAULT 1,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `id` INT(11) NOT NULL AUTO_INCREMENT,
+  `department_id` INT(11) NULL, -- NULL for administrators, set for all department users
+  `name` VARCHAR(100) NOT NULL,
+  `email` VARCHAR(100) NOT NULL,
+  `password` VARCHAR(255) NOT NULL,
+  `role` ENUM('administrator', 'hod', 'faculty', 'staff', 'student') NOT NULL,
+  `is_active` TINYINT(1) NOT NULL DEFAULT 1,
+  `password_updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP(), -- For session invalidation on password change
+  `failed_login_attempts` TINYINT(1) NOT NULL DEFAULT 0, -- For brute-force protection
+  `lockout_until` TIMESTAMP NULL DEFAULT NULL, -- For brute-force protection
+  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP(),
   PRIMARY KEY (`id`),
   UNIQUE KEY `email` (`email`),
-  KEY `role_id` (`role_id`),
-  CONSTRAINT `users_ibfk_1` FOREIGN KEY (`role_id`) REFERENCES `roles` (`id`)
+  KEY `department_id` (`department_id`),
+  CONSTRAINT `users_ibfk_1` FOREIGN KEY (`department_id`) REFERENCES `departments` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-CREATE TABLE `departments` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `department_name` varchar(255) NOT NULL,
-  `department_code` varchar(50) NOT NULL,
-  `hod_name` varchar(255) NOT NULL,
-  `hod_email` varchar(255) NOT NULL,
-  `db_name` varchar(255) NOT NULL,
-  `is_active` tinyint(1) NOT NULL DEFAULT 1,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `department_code` (`department_code`),
-  UNIQUE KEY `hod_email` (`hod_email`),
-  UNIQUE KEY `db_name` (`db_name`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+-- Insert a default administrator
+INSERT INTO `users` (`name`, `email`, `password`, `role`) VALUES
+('Tezpur University', 'admin@sms.com', '$2y$10$HYMSe9vfs6kutWeJtgTYE.FIQYp/ydFqOThuHkwvamO.jQKnw3m5q', 'administrator');
+
