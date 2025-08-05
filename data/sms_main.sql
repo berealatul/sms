@@ -32,7 +32,7 @@ CREATE TABLE `users` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 INSERT INTO `users` (`name`, `email`, `password`, `role_id`) VALUES
-('Main Administrator', 'superadmin@example.com', '<?php echo password_hash("superadminpass", PASSWORD_DEFAULT); ?>', 1);
+('Main Administrator', 'superadmin@example.com', '$2y$10$qnxKADue821zYLcaEArKguvITHPf1G/P5nwDd81QAUVo4Fk16/Id2', 1);
 
 CREATE TABLE `departments` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
