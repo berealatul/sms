@@ -1,1 +1,3 @@
-data/mca_student.csv
+# ignore the whole logs directory
+
+docs/
