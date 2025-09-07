@@ -2,6 +2,7 @@
 require_once 'config/Database.php';
 require_once 'middleware/AuthMiddleware.php';
 require_once 'controllers/AuthController.php';
+require_once 'controllers/DepartmentController.php';
 require_once 'utils/Response.php';
 require_once 'utils/Security.php';
 
@@ -22,22 +23,48 @@ $method = $_SERVER['REQUEST_METHOD'];
 
 // Route the request
 $authController = new AuthController();
+$departmentController = new DepartmentController();
 
-switch ($path) {
-    case '/api/auth/login':
-        if ($method === 'POST') {
-            $authController->login();
-        } else {
-            Response::send(['error' => 'Method not allowed'], 405);
-        }
+// Extract department ID from path if present
+$pathParts = explode('/', trim($path, '/'));
+$departmentId = null;
+if (count($pathParts) >= 3 && $pathParts[0] === 'api' && $pathParts[1] === 'departments' && is_numeric($pathParts[2])) {
+    $departmentId = (int)$pathParts[2];
+}
+
+switch (true) {
+    // Auth routes
+    case $path === '/api/auth/login' && $method === 'POST':
+        $authController->login();
         break;
         
-    case '/api/auth/me':
-        if ($method === 'GET') {
-            $authController->me();
-        } else {
-            Response::send(['error' => 'Method not allowed'], 405);
-        }
+    case $path === '/api/auth/me' && $method === 'GET':
+        $authController->me();
+        break;
+        
+    case $path === '/api/auth/me' && $method === 'PUT':
+        $authController->updateProfile();
+        break;
+        
+    // Department routes
+    case $path === '/api/departments' && $method === 'GET':
+        $departmentController->index();
+        break;
+        
+    case $path === '/api/departments' && $method === 'POST':
+        $departmentController->store();
+        break;
+        
+    case $departmentId && $method === 'GET':
+        $departmentController->show($departmentId);
+        break;
+        
+    case $departmentId && $method === 'PUT':
+        $departmentController->update($departmentId);
+        break;
+        
+    case $departmentId && $method === 'DELETE':
+        $departmentController->destroy($departmentId);
         break;
         
     default:
