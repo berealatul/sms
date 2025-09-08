@@ -75,6 +75,18 @@ class DepartmentController {
                 $stmt = $this->db->prepare('UPDATE user_accounts SET user_type = ?, department_id = ? WHERE user_id = ?');
                 $stmt->execute(['HOD', $departmentId, $existingUser['user_id']]);
                 
+                // If user was a student, update student_profiles department_id
+                if ($existingUser['user_type'] === 'STUDENT') {
+                    $stmt = $this->db->prepare('UPDATE student_profiles SET department_id = ? WHERE user_id = ?');
+                    $stmt->execute([$departmentId, $existingUser['user_id']]);
+                }
+                
+                // If user was faculty, update faculty_profiles department_id
+                if (in_array($existingUser['user_type'], ['FACULTY', 'HOD'])) {
+                    $stmt = $this->db->prepare('UPDATE faculty_profiles SET department_id = ? WHERE user_id = ?');
+                    $stmt->execute([$departmentId, $existingUser['user_id']]);
+                }
+                
                 error_log("Existing user {$input['hod_email']} assigned as HOD to department {$input['department_code']}");
             } else {
                 // Create new user as HOD
@@ -84,6 +96,11 @@ class DepartmentController {
                     VALUES (?, ?, ?, ?, ?)
                 ');
                 $stmt->execute(['HOD', $departmentId, $input['hod_email'], $input['hod_email'], $defaultPassword]);
+                $newUserId = $this->db->lastInsertId();
+                
+                // Create faculty profile for new HOD
+                $stmt = $this->db->prepare('INSERT INTO faculty_profiles (user_id, department_id) VALUES (?, ?)');
+                $stmt->execute([$newUserId, $departmentId]);
                 
                 error_log("New user created and assigned as HOD: {$input['hod_email']}");
             }
@@ -204,12 +221,17 @@ class DepartmentController {
             
             // Update HOD if provided
             if (isset($input['hod_email'])) {
+                // Get current HOD info before removing
+                $stmt = $this->db->prepare('SELECT user_id FROM user_accounts WHERE department_id = ? AND user_type = "HOD"');
+                $stmt->execute([$departmentId]);
+                $currentHod = $stmt->fetch();
+                
                 // Remove current HOD
                 $stmt = $this->db->prepare('UPDATE user_accounts SET user_type = "FACULTY" WHERE department_id = ? AND user_type = "HOD"');
                 $stmt->execute([$departmentId]);
                 
                 // Check if new HOD email exists
-                $stmt = $this->db->prepare('SELECT user_id, user_type FROM user_accounts WHERE email = ?');
+                $stmt = $this->db->prepare('SELECT user_id, user_type, department_id FROM user_accounts WHERE email = ?');
                 $stmt->execute([$input['hod_email']]);
                 $existingUser = $stmt->fetch();
                 
@@ -217,6 +239,17 @@ class DepartmentController {
                     // Update existing user to HOD of this department
                     $stmt = $this->db->prepare('UPDATE user_accounts SET user_type = ?, department_id = ? WHERE user_id = ?');
                     $stmt->execute(['HOD', $departmentId, $existingUser['user_id']]);
+                    
+                    // Update profile tables if needed
+                    if ($existingUser['user_type'] === 'STUDENT') {
+                        $stmt = $this->db->prepare('UPDATE student_profiles SET department_id = ? WHERE user_id = ?');
+                        $stmt->execute([$departmentId, $existingUser['user_id']]);
+                    }
+                    
+                    if (in_array($existingUser['user_type'], ['FACULTY', 'HOD'])) {
+                        $stmt = $this->db->prepare('UPDATE faculty_profiles SET department_id = ? WHERE user_id = ?');
+                        $stmt->execute([$departmentId, $existingUser['user_id']]);
+                    }
                 } else {
                     // Create new user as HOD
                     $defaultPassword = password_hash($input['hod_email'], PASSWORD_DEFAULT);
@@ -225,6 +258,11 @@ class DepartmentController {
                         VALUES (?, ?, ?, ?, ?)
                     ');
                     $stmt->execute(['HOD', $departmentId, $input['hod_email'], $input['hod_email'], $defaultPassword]);
+                    $newUserId = $this->db->lastInsertId();
+                    
+                    // Create faculty profile for new HOD
+                    $stmt = $this->db->prepare('INSERT INTO faculty_profiles (user_id, department_id) VALUES (?, ?)');
+                    $stmt->execute([$newUserId, $departmentId]);
                 }
             }
             
@@ -261,7 +299,20 @@ class DepartmentController {
             $result = $stmt->fetch();
             
             if ($result['user_count'] > 0) {
-                Response::error('Cannot delete department with existing users', 409);
+                Response::error('Cannot delete department with existing users. Please reassign or remove users first.', 409);
+            }
+            
+            // Also check student_profiles and faculty_profiles for department references
+            $stmt = $this->db->prepare('SELECT COUNT(*) as student_count FROM student_profiles WHERE department_id = ?');
+            $stmt->execute([$departmentId]);
+            $studentResult = $stmt->fetch();
+            
+            $stmt = $this->db->prepare('SELECT COUNT(*) as faculty_count FROM faculty_profiles WHERE department_id = ?');
+            $stmt->execute([$departmentId]);
+            $facultyResult = $stmt->fetch();
+            
+            if ($studentResult['student_count'] > 0 || $facultyResult['faculty_count'] > 0) {
+                Response::error('Cannot delete department with existing student or faculty profiles.', 409);
             }
             
             // Delete department
