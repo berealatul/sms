@@ -14,7 +14,9 @@
 
 ### API Endpoints
 
-#### POST /api/auth/login
+#### 🌐 API Base URL: `http://localhost/sms/api/`
+
+#### POST /auth/login
 
 **Request:**
 
@@ -33,7 +35,7 @@
 }
 ```
 
-#### GET /api/auth/me
+#### GET /auth/me
 
 **Headers:** `Authorization: Bearer {token}`
 **Response:**
@@ -47,7 +49,7 @@
 }
 ```
 
-#### PUT /api/auth/me
+#### PUT /auth/me
 
 **Headers:** `Authorization: Bearer {token}`
 **Request (all fields optional):**
@@ -71,9 +73,9 @@
 
 ### Department Management (Admin Only)
 
-#### GET /api/departments
+#### GET /departments
 
-**Headers:** `Authorization: Bearer {token}` (Admin only)
+**Headers:** `Authorization: Bearer {token}` (any authenticated user)
 **Response:**
 
 ```json
@@ -88,7 +90,7 @@
 ]
 ```
 
-#### POST /api/departments
+#### POST /departments
 
 **Headers:** `Authorization: Bearer {token}` (Admin only)
 **Request:**
@@ -113,9 +115,9 @@
 }
 ```
 
-#### GET /api/departments/{id}
+#### GET /departments/{id}
 
-**Headers:** `Authorization: Bearer {token}` (Admin only)
+**Headers:** `Authorization: Bearer {token}` (any authenticated user)
 **Response:**
 
 ```json
@@ -128,7 +130,7 @@
 }
 ```
 
-#### PUT /api/departments/{id}
+#### PUT /departments/{id}
 
 **Headers:** `Authorization: Bearer {token}` (Admin only)
 **Request (all fields optional):**
@@ -149,7 +151,7 @@
 }
 ```
 
-#### DELETE /api/departments/{id}
+#### DELETE /departments/{id}
 
 **Headers:** `Authorization: Bearer {token}` (Admin only)
 **Response:**
@@ -160,13 +162,155 @@
 }
 ```
 
+### User Management (HOD Only)
+
+#### GET /users
+
+**Headers:** `Authorization: Bearer {token}` (HOD only)
+**Response:**
+
+```json
+[
+  {
+    "user_id": 3,
+    "user_type": "FACULTY",
+    "full_name": "John Doe",
+    "email": "john.doe@gmail.com",
+    "is_active": true
+  }
+]
+```
+
+#### POST /users
+
+**Headers:** `Authorization: Bearer {token}` (HOD only)
+**Request:**
+
+```json
+{
+  "user_type": "FACULTY",
+  "email": "new.faculty@gmail.com"
+}
+```
+
+#### POST /users/bulk
+
+**Headers:** `Authorization: Bearer {token}` (HOD only)
+**Request:**
+
+```json
+{
+  "users": [
+    { "user_type": "STUDENT", "email": "student1@gmail.com" },
+    { "user_type": "FACULTY", "email": "faculty1@gmail.com" }
+  ]
+}
+```
+
+#### PUT /users/{id}
+
+**Headers:** `Authorization: Bearer {token}` (HOD only)
+**Request:**
+
+```json
+{
+  "full_name": "Updated Name",
+  "user_type": "STAFF"
+}
+```
+
+#### DELETE /users/{id}
+
+**Headers:** `Authorization: Bearer {token}` (HOD only)
+
+#### PUT /users/activate
+
+**Headers:** `Authorization: Bearer {token}` (HOD only)
+**Request:**
+
+```json
+{
+  "user_ids": [5, 6, 7]
+}
+```
+
+### Programme Management (HOD Only)
+
+#### GET /programmes
+
+**Headers:** `Authorization: Bearer {token}` (HOD only)
+
+#### POST /programmes
+
+**Headers:** `Authorization: Bearer {token}` (HOD only)
+**Request:**
+
+```json
+{
+  "programme_name": "PhD Computer Science",
+  "degree_level_id": 3,
+  "minimum_duration_years": 3,
+  "maximum_duration_years": 6
+}
+```
+
+#### PUT /programmes/{id}
+
+**Headers:** `Authorization: Bearer {token}` (HOD only)
+**Request:**
+
+```json
+{
+  "is_active": false
+}
+```
+
+#### DELETE /programmes/{id}
+
+**Headers:** `Authorization: Bearer {token}` (HOD only)
+
+### Batch Management (HOD Only)
+
+#### GET /batches
+
+**Headers:** `Authorization: Bearer {token}` (HOD only)
+
+#### POST /batches
+
+**Headers:** `Authorization: Bearer {token}` (HOD only)
+**Request:**
+
+```json
+{
+  "programme_id": 1,
+  "batch_name": "2024 Autumn Batch",
+  "start_year": 2024,
+  "start_semester": "AUTUMN"
+}
+```
+
+#### PUT /batches/{id}
+
+**Headers:** `Authorization: Bearer {token}` (HOD only)
+**Request:**
+
+```json
+{
+  "is_active": false
+}
+```
+
+#### DELETE /batches/{id}
+
+**Headers:** `Authorization: Bearer {token}` (HOD only)
+
 ### Test Users (from schema.sql)
 
-- **Admin:** admin@gmail.com / password (No department)
-- **HOD:** hod.cse@gmail.com / password (CSE Department)
-- **Faculty:** faculty.cse@gmail.com / password (CSE Department)
-- **Staff:** staff.cse@gmail.com / password (CSE Department)
-- **Student:** student.cse@gmail.com / password (CSE Department)
+- **Admin:** admin@gmail.com / adminpass (No department)
+- **HOD:** hod.cse@gmail.com / adminpass (CSE Department)
+- **Faculty:** faculty.cse@gmail.com / adminpass (CSE Department)
+- **Staff:** staff.cse@gmail.com / adminpass (CSE Department)
+- **Student:** student.cse@gmail.com / adminpass (CSE Department)
 
 ### Architecture
 

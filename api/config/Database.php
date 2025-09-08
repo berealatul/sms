@@ -7,7 +7,7 @@ class Database {
         $host = 'localhost';
         $dbname = 'sms';
         $username = 'root';
-        $password = 'password';
+        $password = '';
         
         try {
             $this->pdo = new PDO(

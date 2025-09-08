@@ -19,7 +19,8 @@ class Security {
         $max_requests = 60; // Max 60 requests per minute
         
         // Simple file-based rate limiting (in production, use Redis or database)
-        $rate_limit_file = sys_get_temp_dir() . "/rate_limit_$ip";
+        $safe_ip = str_replace([':', '.'], '_', $ip);
+        $rate_limit_file = sys_get_temp_dir() . "/rate_limit_$safe_ip.json";
         
         if (file_exists($rate_limit_file)) {
             $data = json_decode(file_get_contents($rate_limit_file), true);

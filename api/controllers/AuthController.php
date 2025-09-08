@@ -31,7 +31,6 @@ class AuthController {
             $user = $stmt->fetch();
             
             if (!$user || !password_verify($input['password'], $user['password_hash'])) {
-                // Log failed login attempt
                 error_log("Failed login attempt for email: " . $input['email']);
                 Response::error('Invalid credentials', 401);
             }
@@ -48,7 +47,6 @@ class AuthController {
             
             $token = JWTService::encode($payload);
             
-            // Log successful login
             error_log("Successful login for user: " . $user['email']);
             
             Response::send([
@@ -86,7 +84,7 @@ class AuthController {
         // Validate input fields
         foreach ($input as $key => $value) {
             if (!in_array($key, $allowedFields)) {
-                Response::error("Field '$key' is not allowed for update", 400);
+                Response::error("Field '$key' is not allowed for update. Allowed fields: " . implode(', ', $allowedFields), 400);
             }
         }
         
