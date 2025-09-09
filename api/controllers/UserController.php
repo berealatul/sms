@@ -12,17 +12,37 @@ class UserController {
     }
     
     public function index() {
-        // HOD can view users in their department
-        $user = AuthMiddleware::requireRole(['HOD']);
+        // HOD, STAFF, FACULTY can view users in their department
+        $user = AuthMiddleware::requireRole(['HOD', 'STAFF', 'FACULTY']);
+        
+        // Get query parameters
+        $userType = isset($_GET['type']) ? $_GET['type'] : null;
+        
+        // Validate user type if provided
+        $validUserTypes = ['STUDENT', 'FACULTY', 'STAFF', 'HOD'];
+        if ($userType && !in_array($userType, $validUserTypes)) {
+            Response::error('Invalid user type. Valid types: ' . implode(', ', $validUserTypes), 400);
+        }
         
         try {
-            $stmt = $this->db->prepare('
-                SELECT user_id, user_type, full_name, email, is_active 
-                FROM user_accounts 
-                WHERE department_id = ? AND user_type IN ("FACULTY", "STAFF", "STUDENT")
-                ORDER BY user_type, full_name
-            ');
-            $stmt->execute([$user['department_id']]);
+            // Build query based on user type filter
+            $sql = '
+                SELECT u.user_id, u.user_type, u.full_name, u.email, u.is_active 
+                FROM user_accounts u 
+                WHERE u.department_id = ?
+            ';
+            $params = [$user['department_id']];
+            
+            // Add user type filter if specified
+            if ($userType) {
+                $sql .= ' AND u.user_type = ?';
+                $params[] = $userType;
+            }
+            
+            $sql .= ' ORDER BY u.user_type, u.full_name';
+            
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute($params);
             $users = $stmt->fetchAll();
             
             Response::send($users);
@@ -181,8 +201,8 @@ class UserController {
     }
     
     public function update($userId) {
-        // HOD can update users in their department
-        $user = AuthMiddleware::requireRole(['HOD']);
+        // HOD can update any user, STAFF can update students only
+        $user = AuthMiddleware::requireRole(['HOD', 'STAFF']);
         
         $input = json_decode(file_get_contents('php://input'), true);
         
@@ -191,70 +211,121 @@ class UserController {
         }
         
         try {
-            // Check if user belongs to HOD's department and is not admin/hod
+            // Get target user details
             $stmt = $this->db->prepare('
-                SELECT user_type, department_id FROM user_accounts 
-                WHERE user_id = ? AND department_id = ? AND user_type IN ("FACULTY", "STAFF", "STUDENT")
+                SELECT user_id, user_type, email, department_id 
+                FROM user_accounts 
+                WHERE user_id = ? AND department_id = ?
             ');
             $stmt->execute([$userId, $user['department_id']]);
             $targetUser = $stmt->fetch();
             
             if (!$targetUser) {
-                Response::error('User not found or not authorized to modify', 404);
+                Response::error('User not found in your department', 404);
             }
             
+            // Check permissions based on user role
+            if ($user['user_type'] === 'STAFF') {
+                // STAFF can only update STUDENT details
+                if ($targetUser['user_type'] !== 'STUDENT') {
+                    Response::error('Staff can only update student details', 403);
+                }
+            } elseif ($user['user_type'] === 'HOD') {
+                // HOD can update anyone except other HODs from different departments
+                if ($targetUser['user_type'] === 'HOD' && $targetUser['user_id'] !== $user['user_id']) {
+                    // Check if trying to update another department's HOD
+                    if ($targetUser['department_id'] !== $user['department_id']) {
+                        Response::error('Cannot update HOD from different department', 403);
+                    }
+                }
+            }
+            
+            // Validate input fields
+            $allowedFields = ['full_name', 'email', 'user_type', 'is_active', 'reset_password'];
             $updateData = [];
-            $allowedFields = ['user_type', 'full_name', 'email'];
             
             foreach ($input as $key => $value) {
                 if (!in_array($key, $allowedFields)) {
                     Response::error("Field '$key' is not allowed for update", 400);
                 }
-                
-                if ($key === 'user_type' && !in_array($value, ['FACULTY', 'STAFF', 'STUDENT'])) {
-                    Response::error('Invalid user type', 400);
-                }
-                
-                if ($key === 'email' && !Security::validateEmail($value)) {
-                    Response::error('Invalid email format', 400);
-                }
-                
-                $updateData[$key] = $value;
             }
             
-            if (empty($updateData)) {
-                Response::error('No fields provided for update', 400);
+            // Validate email if provided
+            if (isset($input['email']) && !Security::validateEmail($input['email'])) {
+                Response::error('Invalid email format', 400);
+            }
+            
+            // Validate user_type if provided (only HOD can change user types)
+            if (isset($input['user_type'])) {
+                if ($user['user_type'] !== 'HOD') {
+                    Response::error('Only HOD can change user types', 403);
+                }
+                
+                $validUserTypes = ['STUDENT', 'FACULTY', 'STAFF'];
+                if (!in_array($input['user_type'], $validUserTypes)) {
+                    Response::error('Invalid user type. Valid types: ' . implode(', ', $validUserTypes), 400);
+                }
             }
             
             $this->db->beginTransaction();
             
-            // Check email uniqueness if provided
-            if (isset($updateData['email'])) {
+            // Handle password reset
+            if (isset($input['reset_password']) && $input['reset_password'] === true) {
+                // Reset password to email address
+                $newPassword = password_hash($targetUser['email'], PASSWORD_DEFAULT);
+                $stmt = $this->db->prepare('UPDATE user_accounts SET password_hash = ? WHERE user_id = ?');
+                $stmt->execute([$newPassword, $userId]);
+                
+                error_log("Password reset for user {$targetUser['email']} by {$user['email']}");
+            }
+            
+            // Build update query for other fields
+            $updateFields = [];
+            $updateValues = [];
+            
+            if (isset($input['full_name'])) {
+                $updateFields[] = 'full_name = ?';
+                $updateValues[] = $input['full_name'];
+            }
+            
+            if (isset($input['email'])) {
+                // Check if email already exists
                 $stmt = $this->db->prepare('SELECT user_id FROM user_accounts WHERE email = ? AND user_id != ?');
-                $stmt->execute([$updateData['email'], $userId]);
+                $stmt->execute([$input['email'], $userId]);
                 if ($stmt->fetch()) {
                     Response::error('Email already exists', 409);
                 }
+                
+                $updateFields[] = 'email = ?';
+                $updateValues[] = $input['email'];
             }
             
-            // Update user account
-            $setClause = [];
-            $values = [];
-            
-            foreach ($updateData as $field => $value) {
-                $setClause[] = "$field = ?";
-                $values[] = $value;
+            if (isset($input['user_type'])) {
+                $updateFields[] = 'user_type = ?';
+                $updateValues[] = $input['user_type'];
             }
             
-            $values[] = $userId;
+            if (isset($input['is_active'])) {
+                $updateFields[] = 'is_active = ?';
+                $updateValues[] = $input['is_active'] ? 1 : 0;
+            }
             
-            $sql = "UPDATE user_accounts SET " . implode(', ', $setClause) . " WHERE user_id = ?";
-            $stmt = $this->db->prepare($sql);
-            $stmt->execute($values);
+            // Execute update if there are fields to update
+            if (!empty($updateFields)) {
+                $updateValues[] = $userId;
+                $sql = "UPDATE user_accounts SET " . implode(', ', $updateFields) . " WHERE user_id = ?";
+                $stmt = $this->db->prepare($sql);
+                $stmt->execute($updateValues);
+            }
             
             $this->db->commit();
             
-            Response::send(['message' => 'User updated successfully']);
+            $message = 'User updated successfully';
+            if (isset($input['reset_password']) && $input['reset_password'] === true) {
+                $message .= '. Password has been reset to user email.';
+            }
+            
+            Response::send(['message' => $message]);
             
         } catch (Exception $e) {
             $this->db->rollBack();
@@ -329,6 +400,339 @@ class UserController {
         } catch (Exception $e) {
             error_log("Activate users error: " . $e->getMessage());
             Response::error('Failed to activate users', 500);
+        }
+    }
+    
+    public function activateUser($userId) {
+        // Only HOD can activate users in their department
+        $user = AuthMiddleware::requireRole(['HOD']);
+        
+        try {
+            // Check if user exists and belongs to HOD's department
+            $stmt = $this->db->prepare('
+                SELECT user_id, user_type, full_name, email, is_active 
+                FROM user_accounts 
+                WHERE user_id = ? AND department_id = ?
+            ');
+            $stmt->execute([$userId, $user['department_id']]);
+            $targetUser = $stmt->fetch();
+            
+            if (!$targetUser) {
+                Response::error('User not found in your department', 404);
+            }
+            
+            if ($targetUser['is_active']) {
+                Response::error('User is already active', 400);
+            }
+            
+            // Activate user
+            $stmt = $this->db->prepare('UPDATE user_accounts SET is_active = 1 WHERE user_id = ?');
+            $stmt->execute([$userId]);
+            
+            error_log("User activated: {$targetUser['email']} by {$user['email']}");
+            
+            Response::send([
+                'message' => 'User activated successfully',
+                'user_id' => $userId,
+                'email' => $targetUser['email']
+            ]);
+            
+        } catch (Exception $e) {
+            error_log("Activate user error: " . $e->getMessage());
+            Response::error('Failed to activate user', 500);
+        }
+    }
+    
+    public function deactivate($userId) {
+        // Only HOD can deactivate users in their department
+        $user = AuthMiddleware::requireRole(['HOD']);
+        
+        try {
+            // Check if user exists and belongs to HOD's department
+            $stmt = $this->db->prepare('
+                SELECT user_id, user_type, full_name, email, is_active 
+                FROM user_accounts 
+                WHERE user_id = ? AND department_id = ?
+            ');
+            $stmt->execute([$userId, $user['department_id']]);
+            $targetUser = $stmt->fetch();
+            
+            if (!$targetUser) {
+                Response::error('User not found in your department', 404);
+            }
+            
+            // Prevent HOD from deactivating themselves
+            if ($targetUser['user_id'] == $user['user_id']) {
+                Response::error('You cannot deactivate yourself', 403);
+            }
+            
+            if (!$targetUser['is_active']) {
+                Response::error('User is already inactive', 400);
+            }
+            
+            // Deactivate user
+            $stmt = $this->db->prepare('UPDATE user_accounts SET is_active = 0 WHERE user_id = ?');
+            $stmt->execute([$userId]);
+            
+            error_log("User deactivated: {$targetUser['email']} by {$user['email']}");
+            
+            Response::send([
+                'message' => 'User deactivated successfully',
+                'user_id' => $userId,
+                'email' => $targetUser['email']
+            ]);
+            
+        } catch (Exception $e) {
+            error_log("Deactivate user error: " . $e->getMessage());
+            Response::error('Failed to deactivate user', 500);
+        }
+    }
+
+    public function show($userId) {
+        // HOD, STAFF, FACULTY can view users in their department
+        $user = AuthMiddleware::requireRole(['HOD', 'STAFF', 'FACULTY']);
+        
+        try {
+            $stmt = $this->db->prepare('
+                SELECT u.user_id, u.user_type, u.full_name, u.email, u.is_active,
+                       u.department_id, d.department_name, d.department_code
+                FROM user_accounts u 
+                LEFT JOIN departments d ON u.department_id = d.department_id
+                WHERE u.user_id = ? AND u.department_id = ?
+            ');
+            $stmt->execute([$userId, $user['department_id']]);
+            $targetUser = $stmt->fetch();
+            
+            if (!$targetUser) {
+                Response::error('User not found in your department', 404);
+            }
+            
+            Response::send($targetUser);
+            
+        } catch (Exception $e) {
+            error_log("Get user error: " . $e->getMessage());
+            Response::error('Failed to retrieve user', 500);
+        }
+    }
+
+    public function findByCredentials() {
+        // Any authenticated user can search for user_id using roll number or email
+        $user = AuthMiddleware::requireAuth();
+        
+        $input = json_decode(file_get_contents('php://input'), true);
+        
+        if (!$input) {
+            Response::error('Invalid JSON input', 400);
+        }
+        
+        // Validate that at least one search parameter is provided
+        if (!isset($input['roll_number']) && !isset($input['email'])) {
+            Response::error('Either roll_number or email must be provided', 400);
+        }
+        
+        try {
+            $sql = '';
+            $params = [];
+            
+            if (isset($input['roll_number']) && isset($input['email'])) {
+                // Search by both roll number and email
+                $sql = '
+                    SELECT u.user_id, u.user_type, u.full_name, u.email, 
+                           sp.roll_number, d.department_code, d.department_name
+                    FROM user_accounts u 
+                    LEFT JOIN student_profiles sp ON u.user_id = sp.user_id 
+                    LEFT JOIN departments d ON u.department_id = d.department_id
+                    WHERE sp.roll_number = ? AND u.email = ?
+                ';
+                $params = [$input['roll_number'], $input['email']];
+                
+            } elseif (isset($input['roll_number'])) {
+                // Search by roll number only
+                $sql = '
+                    SELECT u.user_id, u.user_type, u.full_name, u.email, 
+                           sp.roll_number, d.department_code, d.department_name
+                    FROM user_accounts u 
+                    INNER JOIN student_profiles sp ON u.user_id = sp.user_id 
+                    LEFT JOIN departments d ON u.department_id = d.department_id
+                    WHERE sp.roll_number = ?
+                ';
+                $params = [$input['roll_number']];
+                
+            } elseif (isset($input['email'])) {
+                // Search by email only
+                $sql = '
+                    SELECT u.user_id, u.user_type, u.full_name, u.email, 
+                           sp.roll_number, d.department_code, d.department_name
+                    FROM user_accounts u 
+                    LEFT JOIN student_profiles sp ON u.user_id = sp.user_id 
+                    LEFT JOIN departments d ON u.department_id = d.department_id
+                    WHERE u.email = ?
+                ';
+                $params = [$input['email']];
+            }
+            
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute($params);
+            $result = $stmt->fetch();
+            
+            if (!$result) {
+                Response::error('User not found with provided credentials', 404);
+            }
+            
+            // Remove null roll_number for non-students
+            if ($result['roll_number'] === null) {
+                unset($result['roll_number']);
+            }
+            
+            Response::send($result);
+            
+        } catch (Exception $e) {
+            error_log("Find user by credentials error: " . $e->getMessage());
+            Response::error('Failed to find user', 500);
+        }
+    }
+
+    public function bulkActivate() {
+        // Only HOD can bulk activate users in their department
+        $user = AuthMiddleware::requireRole(['HOD']);
+        
+        $input = json_decode(file_get_contents('php://input'), true);
+        
+        if (!$input || !isset($input['user_ids']) || !is_array($input['user_ids'])) {
+            Response::error('user_ids array is required', 400);
+        }
+        
+        if (empty($input['user_ids'])) {
+            Response::error('At least one user_id is required', 400);
+        }
+        
+        try {
+            $this->db->beginTransaction();
+            
+            $successCount = 0;
+            $errors = [];
+            
+            foreach ($input['user_ids'] as $userId) {
+                // Check if user exists and belongs to HOD's department
+                $stmt = $this->db->prepare('
+                    SELECT user_id, email, is_active 
+                    FROM user_accounts 
+                    WHERE user_id = ? AND department_id = ?
+                ');
+                $stmt->execute([$userId, $user['department_id']]);
+                $targetUser = $stmt->fetch();
+                
+                if (!$targetUser) {
+                    $errors[] = "User ID $userId not found in your department";
+                    continue;
+                }
+                
+                if ($targetUser['is_active']) {
+                    $errors[] = "User ID $userId is already active";
+                    continue;
+                }
+                
+                // Activate user
+                $stmt = $this->db->prepare('UPDATE user_accounts SET is_active = 1 WHERE user_id = ?');
+                $stmt->execute([$userId]);
+                $successCount++;
+                
+                error_log("User activated: {$targetUser['email']} by {$user['email']}");
+            }
+            
+            $this->db->commit();
+            
+            $response = [
+                'message' => "Successfully activated $successCount users",
+                'activated_count' => $successCount,
+                'total_requested' => count($input['user_ids'])
+            ];
+            
+            if (!empty($errors)) {
+                $response['errors'] = $errors;
+            }
+            
+            Response::send($response);
+            
+        } catch (Exception $e) {
+            $this->db->rollBack();
+            error_log("Bulk activate users error: " . $e->getMessage());
+            Response::error('Failed to activate users', 500);
+        }
+    }
+    
+    public function bulkDeactivate() {
+        // Only HOD can bulk deactivate users in their department
+        $user = AuthMiddleware::requireRole(['HOD']);
+        
+        $input = json_decode(file_get_contents('php://input'), true);
+        
+        if (!$input || !isset($input['user_ids']) || !is_array($input['user_ids'])) {
+            Response::error('user_ids array is required', 400);
+        }
+        
+        if (empty($input['user_ids'])) {
+            Response::error('At least one user_id is required', 400);
+        }
+        
+        try {
+            $this->db->beginTransaction();
+            
+            $successCount = 0;
+            $errors = [];
+            
+            foreach ($input['user_ids'] as $userId) {
+                // Check if user exists and belongs to HOD's department
+                $stmt = $this->db->prepare('
+                    SELECT user_id, email, is_active 
+                    FROM user_accounts 
+                    WHERE user_id = ? AND department_id = ?
+                ');
+                $stmt->execute([$userId, $user['department_id']]);
+                $targetUser = $stmt->fetch();
+                
+                if (!$targetUser) {
+                    $errors[] = "User ID $userId not found in your department";
+                    continue;
+                }
+                
+                // Prevent HOD from deactivating themselves
+                if ($targetUser['user_id'] == $user['user_id']) {
+                    $errors[] = "Cannot deactivate yourself (User ID $userId)";
+                    continue;
+                }
+                
+                if (!$targetUser['is_active']) {
+                    $errors[] = "User ID $userId is already inactive";
+                    continue;
+                }
+                
+                // Deactivate user
+                $stmt = $this->db->prepare('UPDATE user_accounts SET is_active = 0 WHERE user_id = ?');
+                $stmt->execute([$userId]);
+                $successCount++;
+                
+                error_log("User deactivated: {$targetUser['email']} by {$user['email']}");
+            }
+            
+            $this->db->commit();
+            
+            $response = [
+                'message' => "Successfully deactivated $successCount users",
+                'deactivated_count' => $successCount,
+                'total_requested' => count($input['user_ids'])
+            ];
+            
+            if (!empty($errors)) {
+                $response['errors'] = $errors;
+            }
+            
+            Response::send($response);
+            
+        } catch (Exception $e) {
+            $this->db->rollBack();
+            error_log("Bulk deactivate users error: " . $e->getMessage());
+            Response::error('Failed to deactivate users', 500);
         }
     }
 }

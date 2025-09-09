@@ -22,8 +22,6 @@ This guide provides everything frontend developers need to integrate with the SM
 
 **Authentication:** JWT Bearer Token
 
-**CORS:** Configured for `http://localhost:3000`
-
 ## 🔐 Authentication Flow
 
 ### 1. Login Process
@@ -95,295 +93,151 @@ const getCurrentUser = async () => {
 
 ## 🛠️ API Endpoints
 
-### Authentication Endpoints
-
-#### POST `/auth/login`
+### 🔐 Authentication Endpoints
 
 ```javascript
-// Login
-fetch("http://localhost/sms/api/auth/login", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({
-    email: "admin@gmail.com",
-    password: "adminpass",
-  }),
-});
+// Login (any user type)
+POST /auth/login
+{
+  "email": "admin@gmail.com", // or hod.cse@gmail.com, faculty.cse@gmail.com, etc.
+  "password": "adminpass"
+}
+
+// Get current user info
+GET /auth/me
+Headers: { Authorization: "Bearer {token}" }
+
+// Update profile (enhanced with password reset option)
+PUT /auth/me
+{
+  "full_name": "Updated Name",
+  "email": "new@email.com",
+  "current_password": "oldpass",  // required for password change
+  "new_password": "newpass123"
+}
 ```
 
-#### GET `/auth/me`
+### 📚 Degree Management (NEW)
 
 ```javascript
-// Get current user
-authenticatedFetch("http://localhost/sms/api/auth/me");
+// Get all degrees (any authenticated user)
+GET /degrees
+
+// Get specific degree (any authenticated user)
+GET /degrees/{id}
+
+// Create degree (HOD only)
+POST /degrees
+{
+  "level_name": "Professional Diploma"
+}
+
+// Update degree (HOD only)
+PUT /degrees/{id}
+{
+  "level_name": "Updated Degree Name"
+}
+
+// Delete degree (HOD only)
+DELETE /degrees/{id}
 ```
 
-#### PUT `/auth/me`
+### 🏢 Department Management (Updated Access)
 
 ```javascript
-// Update profile (name/email only)
-authenticatedFetch("http://localhost/sms/api/auth/me", {
-  method: "PUT",
-  body: JSON.stringify({
-    full_name: "Updated Name",
-    email: "new@email.com",
-  }),
-});
+// Get all departments (any authenticated user - UPDATED)
+GET / departments;
 
-// Update password
-authenticatedFetch("http://localhost/sms/api/auth/me", {
-  method: "PUT",
-  body: JSON.stringify({
-    current_password: "oldpass",
-    new_password: "newpass123",
-  }),
-});
+// Get specific department (any authenticated user - UPDATED)
+GET / departments / { id };
+
+// Create/Update/Delete department (Admin only - unchanged)
+POST / departments;
+PUT / departments / { id };
+DELETE / departments / { id };
 ```
 
-### Department Management (Admin Only)
-
-#### GET `/departments`
+### 👥 User Management (Enhanced Access Controls)
 
 ```javascript
-// Get all departments
-const getDepartments = async () => {
-  const response = await authenticatedFetch(
-    "http://localhost/sms/api/departments"
-  );
-  return await response.json();
-};
+// Get all users in department (HOD, Staff, Faculty - EXPANDED ACCESS)
+GET /users
+
+// Get users by type (HOD, Staff, Faculty - NEW FILTERING)
+GET /users?type=STUDENT
+GET /users?type=FACULTY
+GET /users?type=STAFF
+GET /users?type=HOD
+
+// Get specific user (HOD, Staff, Faculty - EXPANDED ACCESS)
+GET /users/{id}
+
+// Find user by credentials (any authenticated user)
+POST /users/find
+{
+  "roll_number": "CSE2020001",  // optional
+  "email": "student@gmail.com"  // optional - can use either or both
+}
+
+// Update user (ENHANCED PERMISSIONS)
+PUT /users/{id}
+{
+  "full_name": "Updated Name",
+  "email": "updated@email.com",
+  "user_type": "STAFF",        // HOD only
+  "is_active": true,
+  "reset_password": true       // NEW: Reset password to email
+}
+// HOD: Can update anyone in department
+// STAFF: Can only update students in department
+
+// Individual user activation/deactivation (HOD only - NEW)
+PUT /users/{id}/activate
+PUT /users/{id}/deactivate
+
+// Bulk user activation/deactivation (HOD only - ENHANCED)
+PUT /users/activate
+PUT /users/deactivate
+{
+  "user_ids": [5, 6, 7]
+}
+
+// Create/Delete users (HOD only - unchanged)
+POST /users
+POST /users/bulk
+DELETE /users/{id}
 ```
 
-#### POST `/departments`
+### 🎓 Programme Management (Updated Access)
 
 ```javascript
-// Create department
-const createDepartment = async (departmentData) => {
-  const response = await authenticatedFetch(
-    "http://localhost/sms/api/departments",
-    {
-      method: "POST",
-      body: JSON.stringify({
-        department_code: "EEE",
-        department_name: "Electrical Engineering",
-        hod_email: "hod.eee@gmail.com",
-      }),
-    }
-  );
-  return await response.json();
-};
+// Get all programmes (any department user - EXPANDED ACCESS)
+GET / programmes;
+
+// Get specific programme (any department user - NEW)
+GET / programmes / { id };
+
+// Create/Update/Delete programme (HOD only - unchanged)
+POST / programmes;
+PUT / programmes / { id };
+DELETE / programmes / { id };
 ```
 
-#### GET `/departments/{id}`
+### 📅 Batch Management (Enhanced Access)
 
 ```javascript
-// Get specific department
-const getDepartment = async (id) => {
-  const response = await authenticatedFetch(
-    `http://localhost/sms/api/departments/${id}`
-  );
-  return await response.json();
-};
-```
+// Get all batches (any department user - EXPANDED ACCESS)
+GET / batches;
 
-#### PUT `/departments/{id}`
+// Get specific batch (any department user - NEW)
+GET / batches / { id };
 
-```javascript
-// Update department
-const updateDepartment = async (id, updates) => {
-  const response = await authenticatedFetch(
-    `http://localhost/sms/api/departments/${id}`,
-    {
-      method: "PUT",
-      body: JSON.stringify(updates),
-    }
-  );
-  return await response.json();
-};
-```
+// Create/Update batch (HOD, Staff - EXPANDED ACCESS)
+POST / batches;
+PUT / batches / { id };
 
-#### DELETE `/departments/{id}`
-
-```javascript
-// Delete department
-const deleteDepartment = async (id) => {
-  const response = await authenticatedFetch(
-    `http://localhost/sms/api/departments/${id}`,
-    {
-      method: "DELETE",
-    }
-  );
-  return await response.json();
-};
-```
-
-### User Management (HOD Only)
-
-#### GET `/users`
-
-```javascript
-// Get users in HOD's department
-const getUsers = async () => {
-  const response = await authenticatedFetch("http://localhost/sms/api/users");
-  return await response.json();
-};
-```
-
-#### POST `/users`
-
-```javascript
-// Create single user
-const createUser = async (userData) => {
-  const response = await authenticatedFetch("http://localhost/sms/api/users", {
-    method: "POST",
-    body: JSON.stringify({
-      user_type: "FACULTY",
-      email: "faculty@gmail.com",
-    }),
-  });
-  return await response.json();
-};
-```
-
-#### POST `/users/bulk`
-
-```javascript
-// Create multiple users
-const createBulkUsers = async (users) => {
-  const response = await authenticatedFetch(
-    "http://localhost/sms/api/users/bulk",
-    {
-      method: "POST",
-      body: JSON.stringify({
-        users: [
-          { user_type: "STUDENT", email: "student1@gmail.com" },
-          { user_type: "FACULTY", email: "faculty1@gmail.com" },
-        ],
-      }),
-    }
-  );
-  return await response.json();
-};
-```
-
-#### PUT `/users/{id}`
-
-```javascript
-// Update user
-const updateUser = async (id, updates) => {
-  const response = await authenticatedFetch(
-    `http://localhost/sms/api/users/${id}`,
-    {
-      method: "PUT",
-      body: JSON.stringify({
-        full_name: "Updated Name",
-        user_type: "STAFF",
-      }),
-    }
-  );
-  return await response.json();
-};
-```
-
-#### PUT `/users/activate`
-
-```javascript
-// Activate multiple users
-const activateUsers = async (userIds) => {
-  const response = await authenticatedFetch(
-    "http://localhost/sms/api/users/activate",
-    {
-      method: "PUT",
-      body: JSON.stringify({
-        user_ids: [5, 6, 7],
-      }),
-    }
-  );
-  return await response.json();
-};
-```
-
-#### DELETE `/users/{id}`
-
-```javascript
-// Delete user
-const deleteUser = async (id) => {
-  const response = await authenticatedFetch(
-    `http://localhost/sms/api/users/${id}`,
-    {
-      method: "DELETE",
-    }
-  );
-  return await response.json();
-};
-```
-
-### Programme Management (HOD Only)
-
-#### GET `/programmes`
-
-```javascript
-// Get programmes
-const getProgrammes = async () => {
-  const response = await authenticatedFetch(
-    "http://localhost/sms/api/programmes"
-  );
-  return await response.json();
-};
-```
-
-#### POST `/programmes`
-
-```javascript
-// Create programme
-const createProgramme = async (programmeData) => {
-  const response = await authenticatedFetch(
-    "http://localhost/sms/api/programmes",
-    {
-      method: "POST",
-      body: JSON.stringify({
-        programme_name: "MSc Computer Science",
-        degree_level_id: 2,
-        minimum_duration_years: 2,
-        maximum_duration_years: 4,
-      }),
-    }
-  );
-  return await response.json();
-};
-```
-
-### Batch Management (HOD Only)
-
-#### GET `/batches`
-
-```javascript
-// Get batches
-const getBatches = async () => {
-  const response = await authenticatedFetch("http://localhost/sms/api/batches");
-  return await response.json();
-};
-```
-
-#### POST `/batches`
-
-```javascript
-// Create batch
-const createBatch = async (batchData) => {
-  const response = await authenticatedFetch(
-    "http://localhost/sms/api/batches",
-    {
-      method: "POST",
-      body: JSON.stringify({
-        programme_id: 1,
-        batch_name: "2024 Spring Batch",
-        start_year: 2024,
-        start_semester: "SPRING",
-      }),
-    }
-  );
-  return await response.json();
-};
+// Delete batch (HOD only - RESTRICTED)
+DELETE / batches / { id };
 ```
 
 ## 🛡️ Error Handling
@@ -703,35 +557,493 @@ export const userAPI = {
 };
 ```
 
-## 🚀 Getting Started
+## 🔄 Updated React Integration Examples
 
-1. **Clone/Setup**: Ensure the SMS API is running on `http://localhost/sms/api/`
+### Enhanced API Service with New Endpoints
 
-2. **Test Connection**:
+```javascript
+// api/smsApi.js - Updated with all new endpoints
+class SMSApiService {
+  constructor() {
+    this.baseURL = "http://localhost/sms/api";
+    this.token = localStorage.getItem("sms_token");
+  }
 
-   ```javascript
-   fetch("http://localhost/sms/api/auth/login", {
-     method: "POST",
-     headers: { "Content-Type": "application/json" },
-     body: JSON.stringify({
-       email: "admin@gmail.com",
-       password: "adminpass",
-     }),
-   })
-     .then((response) => response.json())
-     .then(console.log);
-   ```
+  // Updated headers with CORS support
+  getHeaders() {
+    return {
+      "Content-Type": "application/json",
+      ...(this.token && { Authorization: `Bearer ${this.token}` }),
+    };
+  }
 
-3. **Implement Authentication**: Use the provided context and service examples
+  // Authentication (enhanced)
+  async login(email, password) {
+    const response = await fetch(`${this.baseURL}/auth/login`, {
+      method: "POST",
+      headers: this.getHeaders(),
+      body: JSON.stringify({ email, password }),
+    });
+    const data = await response.json();
+    if (data.token) {
+      this.token = data.token;
+      localStorage.setItem("sms_token", data.token);
+    }
+    return data;
+  }
 
-4. **Add Role-Based Access**: Use the user role information to show/hide features
+  async updateProfile(profileData) {
+    return this.makeRequest("/auth/me", "PUT", profileData);
+  }
 
-5. **Handle Errors**: Implement proper error handling for better UX
+  // Degrees (NEW)
+  async getDegrees() {
+    return this.makeRequest("/degrees");
+  }
 
-## 📞 Support
+  async createDegree(degreeData) {
+    return this.makeRequest("/degrees", "POST", degreeData);
+  }
 
-- **API Documentation**: See main `README.md` for detailed API specs
-- **Postman Collection**: Import `docs/postman-collection.json` for testing
-- **Test Script**: Run `docs/test-api-script.ps1` to verify API functionality
+  async updateDegree(id, degreeData) {
+    return this.makeRequest(`/degrees/${id}`, "PUT", degreeData);
+  }
 
-Happy coding! 🎉
+  async deleteDegree(id) {
+    return this.makeRequest(`/degrees/${id}`, "DELETE");
+  }
+
+  // Users (enhanced with new features)
+  async getUsers(type = null) {
+    const url = type ? `/users?type=${type}` : "/users";
+    return this.makeRequest(url);
+  }
+
+  async getUser(id) {
+    return this.makeRequest(`/users/${id}`);
+  }
+
+  async findUser(searchData) {
+    return this.makeRequest("/users/find", "POST", searchData);
+  }
+
+  async updateUser(id, userData) {
+    return this.makeRequest(`/users/${id}`, "PUT", userData);
+  }
+
+  async activateUser(id) {
+    return this.makeRequest(`/users/${id}/activate`, "PUT");
+  }
+
+  async deactivateUser(id) {
+    return this.makeRequest(`/users/${id}/deactivate`, "PUT");
+  }
+
+  async bulkActivateUsers(userIds) {
+    return this.makeRequest("/users/activate", "PUT", { user_ids: userIds });
+  }
+
+  async bulkDeactivateUsers(userIds) {
+    return this.makeRequest("/users/deactivate", "PUT", { user_ids: userIds });
+  }
+
+  // Programmes (enhanced access)
+  async getProgrammes() {
+    return this.makeRequest("/programmes");
+  }
+
+  async getProgramme(id) {
+    return this.makeRequest(`/programmes/${id}`);
+  }
+
+  // Batches (enhanced access)
+  async getBatches() {
+    return this.makeRequest("/batches");
+  }
+
+  async getBatch(id) {
+    return this.makeRequest(`/batches/${id}`);
+  }
+
+  // Helper method
+  async makeRequest(endpoint, method = "GET", body = null) {
+    const config = {
+      method,
+      headers: this.getHeaders(),
+    };
+
+    if (body && method !== "GET") {
+      config.body = JSON.stringify(body);
+    }
+
+    const response = await fetch(`${this.baseURL}${endpoint}`, config);
+    return response.json();
+  }
+}
+
+export default new SMSApiService();
+```
+
+### Enhanced User Management Component
+
+```javascript
+// components/UserManagement.jsx - Updated with new features
+import React, { useState, useEffect } from "react";
+import smsApi from "../api/smsApi";
+
+const UserManagement = () => {
+  const [users, setUsers] = useState([]);
+  const [userType, setUserType] = useState("");
+  const [selectedUsers, setSelectedUsers] = useState([]);
+  const [searchCriteria, setSearchCriteria] = useState({
+    roll_number: "",
+    email: "",
+  });
+
+  // Load users with optional filtering
+  const loadUsers = async (type = null) => {
+    try {
+      const data = await smsApi.getUsers(type);
+      setUsers(data);
+    } catch (error) {
+      console.error("Error loading users:", error);
+    }
+  };
+
+  // Search user by roll number or email
+  const searchUser = async () => {
+    try {
+      const searchData = {};
+      if (searchCriteria.roll_number)
+        searchData.roll_number = searchCriteria.roll_number;
+      if (searchCriteria.email) searchData.email = searchCriteria.email;
+
+      if (Object.keys(searchData).length === 0) {
+        alert("Please provide either roll number or email");
+        return;
+      }
+
+      const user = await smsApi.findUser(searchData);
+      setUsers([user]); // Show found user
+    } catch (error) {
+      console.error("User not found:", error);
+      alert("User not found");
+    }
+  };
+
+  // Update user with password reset option
+  const updateUser = async (userId, userData) => {
+    try {
+      await smsApi.updateUser(userId, userData);
+      loadUsers(userType);
+      alert("User updated successfully");
+    } catch (error) {
+      console.error("Error updating user:", error);
+    }
+  };
+
+  // Individual user activation/deactivation
+  const toggleUserStatus = async (userId, activate) => {
+    try {
+      if (activate) {
+        await smsApi.activateUser(userId);
+      } else {
+        await smsApi.deactivateUser(userId);
+      }
+      loadUsers(userType);
+      alert(`User ${activate ? "activated" : "deactivated"} successfully`);
+    } catch (error) {
+      console.error("Error updating user status:", error);
+    }
+  };
+
+  // Bulk operations
+  const bulkUpdateStatus = async (activate) => {
+    if (selectedUsers.length === 0) {
+      alert("Please select users first");
+      return;
+    }
+
+    try {
+      if (activate) {
+        await smsApi.bulkActivateUsers(selectedUsers);
+      } else {
+        await smsApi.bulkDeactivateUsers(selectedUsers);
+      }
+      setSelectedUsers([]);
+      loadUsers(userType);
+      alert(`Users ${activate ? "activated" : "deactivated"} successfully`);
+    } catch (error) {
+      console.error("Error in bulk operation:", error);
+    }
+  };
+
+  useEffect(() => {
+    loadUsers();
+  }, []);
+
+  return (
+    <div className="user-management">
+      <h2>User Management</h2>
+
+      {/* User Type Filter */}
+      <div className="filters">
+        <select
+          value={userType}
+          onChange={(e) => {
+            setUserType(e.target.value);
+            loadUsers(e.target.value || null);
+          }}
+        >
+          <option value="">All Users</option>
+          <option value="STUDENT">Students</option>
+          <option value="FACULTY">Faculty</option>
+          <option value="STAFF">Staff</option>
+          <option value="HOD">HOD</option>
+        </select>
+      </div>
+
+      {/* Search Section */}
+      <div className="search-section">
+        <h3>Search User</h3>
+        <input
+          type="text"
+          placeholder="Roll Number"
+          value={searchCriteria.roll_number}
+          onChange={(e) =>
+            setSearchCriteria({
+              ...searchCriteria,
+              roll_number: e.target.value,
+            })
+          }
+        />
+        <input
+          type="email"
+          placeholder="Email"
+          value={searchCriteria.email}
+          onChange={(e) =>
+            setSearchCriteria({ ...searchCriteria, email: e.target.value })
+          }
+        />
+        <button onClick={searchUser}>Search</button>
+        <button
+          onClick={() => {
+            setSearchCriteria({ roll_number: "", email: "" });
+            loadUsers(userType);
+          }}
+        >
+          Clear
+        </button>
+      </div>
+
+      {/* Bulk Actions */}
+      <div className="bulk-actions">
+        <button
+          onClick={() => bulkUpdateStatus(true)}
+          disabled={selectedUsers.length === 0}
+        >
+          Activate Selected
+        </button>
+        <button
+          onClick={() => bulkUpdateStatus(false)}
+          disabled={selectedUsers.length === 0}
+        >
+          Deactivate Selected
+        </button>
+      </div>
+
+      {/* Users Table */}
+      <table>
+        <thead>
+          <tr>
+            <th>
+              <input
+                type="checkbox"
+                onChange={(e) => {
+                  if (e.target.checked) {
+                    setSelectedUsers(users.map((u) => u.user_id));
+                  } else {
+                    setSelectedUsers([]);
+                  }
+                }}
+              />
+            </th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Type</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {users.map((user) => (
+            <tr key={user.user_id}>
+              <td>
+                <input
+                  type="checkbox"
+                  checked={selectedUsers.includes(user.user_id)}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setSelectedUsers([...selectedUsers, user.user_id]);
+                    } else {
+                      setSelectedUsers(
+                        selectedUsers.filter((id) => id !== user.user_id)
+                      );
+                    }
+                  }}
+                />
+              </td>
+              <td>{user.full_name}</td>
+              <td>{user.email}</td>
+              <td>{user.user_type}</td>
+              <td>{user.is_active ? "Active" : "Inactive"}</td>
+              <td>
+                <button
+                  onClick={() =>
+                    toggleUserStatus(user.user_id, !user.is_active)
+                  }
+                >
+                  {user.is_active ? "Deactivate" : "Activate"}
+                </button>
+                <button
+                  onClick={() =>
+                    updateUser(user.user_id, { reset_password: true })
+                  }
+                >
+                  Reset Password
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+};
+
+export default UserManagement;
+```
+
+### New Degree Management Component
+
+```javascript
+// components/DegreeManagement.jsx - NEW COMPONENT
+import React, { useState, useEffect } from "react";
+import smsApi from "../api/smsApi";
+
+const DegreeManagement = () => {
+  const [degrees, setDegrees] = useState([]);
+  const [newDegree, setNewDegree] = useState({ level_name: "" });
+  const [editingDegree, setEditingDegree] = useState(null);
+
+  const loadDegrees = async () => {
+    try {
+      const data = await smsApi.getDegrees();
+      setDegrees(data);
+    } catch (error) {
+      console.error("Error loading degrees:", error);
+    }
+  };
+
+  const createDegree = async () => {
+    try {
+      await smsApi.createDegree(newDegree);
+      setNewDegree({ level_name: "" });
+      loadDegrees();
+      alert("Degree created successfully");
+    } catch (error) {
+      console.error("Error creating degree:", error);
+    }
+  };
+
+  const updateDegree = async (id, degreeData) => {
+    try {
+      await smsApi.updateDegree(id, degreeData);
+      setEditingDegree(null);
+      loadDegrees();
+      alert("Degree updated successfully");
+    } catch (error) {
+      console.error("Error updating degree:", error);
+    }
+  };
+
+  const deleteDegree = async (id) => {
+    if (confirm("Are you sure you want to delete this degree?")) {
+      try {
+        await smsApi.deleteDegree(id);
+        loadDegrees();
+        alert("Degree deleted successfully");
+      } catch (error) {
+        console.error("Error deleting degree:", error);
+      }
+    }
+  };
+
+  useEffect(() => {
+    loadDegrees();
+  }, []);
+
+  return (
+    <div className="degree-management">
+      <h2>Degree Management</h2>
+
+      {/* Create New Degree */}
+      <div className="create-section">
+        <h3>Create New Degree</h3>
+        <input
+          type="text"
+          placeholder="Degree Level Name"
+          value={newDegree.level_name}
+          onChange={(e) => setNewDegree({ level_name: e.target.value })}
+        />
+        <button onClick={createDegree}>Create Degree</button>
+      </div>
+
+      {/* Degrees List */}
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Level Name</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {degrees.map((degree) => (
+            <tr key={degree.degree_level_id}>
+              <td>{degree.degree_level_id}</td>
+              <td>
+                {editingDegree === degree.degree_level_id ? (
+                  <input
+                    type="text"
+                    defaultValue={degree.level_name}
+                    onBlur={(e) =>
+                      updateDegree(degree.degree_level_id, {
+                        level_name: e.target.value,
+                      })
+                    }
+                  />
+                ) : (
+                  degree.level_name
+                )}
+              </td>
+              <td>
+                <button
+                  onClick={() => setEditingDegree(degree.degree_level_id)}
+                >
+                  Edit
+                </button>
+                <button onClick={() => deleteDegree(degree.degree_level_id)}>
+                  Delete
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+};
+
+export default DegreeManagement;
+```

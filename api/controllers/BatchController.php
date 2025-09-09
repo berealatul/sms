@@ -12,16 +12,23 @@ class BatchController {
     }
     
     public function index() {
-        // HOD can view batches in their department
-        $user = AuthMiddleware::requireRole(['HOD']);
+        // Any authenticated user from department can view batches
+        $user = AuthMiddleware::requireAuth();
+        
+        // Admin has no department, so deny access
+        if ($user['user_type'] === 'ADMIN') {
+            Response::error('Admin users cannot access department batches', 403);
+        }
         
         try {
             $stmt = $this->db->prepare('
-                SELECT b.batch_id, b.batch_name, b.start_year, b.start_semester, 
-                       b.is_active, p.programme_name 
+                SELECT b.batch_id, b.batch_name, b.start_year, b.start_semester, b.is_active,
+                       p.programme_name, p.programme_id,
+                       d.department_code, d.department_name
                 FROM batches b 
-                JOIN programmes p ON b.programme_id = p.programme_id 
-                WHERE b.department_id = ? 
+                LEFT JOIN programmes p ON b.programme_id = p.programme_id
+                LEFT JOIN departments d ON b.department_id = d.department_id
+                WHERE b.department_id = ?
                 ORDER BY b.start_year DESC, b.batch_name
             ');
             $stmt->execute([$user['department_id']]);
@@ -35,9 +42,43 @@ class BatchController {
         }
     }
     
+    public function show($batchId) {
+        // Any authenticated user from department can view specific batch
+        $user = AuthMiddleware::requireAuth();
+        
+        // Admin has no department, so deny access
+        if ($user['user_type'] === 'ADMIN') {
+            Response::error('Admin users cannot access department batches', 403);
+        }
+        
+        try {
+            $stmt = $this->db->prepare('
+                SELECT b.batch_id, b.batch_name, b.start_year, b.start_semester, b.is_active,
+                       p.programme_name, p.programme_id,
+                       d.department_code, d.department_name
+                FROM batches b 
+                LEFT JOIN programmes p ON b.programme_id = p.programme_id
+                LEFT JOIN departments d ON b.department_id = d.department_id
+                WHERE b.batch_id = ? AND b.department_id = ?
+            ');
+            $stmt->execute([$batchId, $user['department_id']]);
+            $batch = $stmt->fetch();
+            
+            if (!$batch) {
+                Response::error('Batch not found in your department', 404);
+            }
+            
+            Response::send($batch);
+            
+        } catch (Exception $e) {
+            error_log("Get batch error: " . $e->getMessage());
+            Response::error('Failed to retrieve batch', 500);
+        }
+    }
+
     public function store() {
-        // HOD can create batches in their department
-        $user = AuthMiddleware::requireRole(['HOD']);
+        // HOD and STAFF can create batches in their department
+        $user = AuthMiddleware::requireRole(['HOD', 'STAFF']);
         
         $input = json_decode(file_get_contents('php://input'), true);
         
@@ -99,8 +140,8 @@ class BatchController {
     }
     
     public function update($batchId) {
-        // HOD can update batches in their department
-        $user = AuthMiddleware::requireRole(['HOD']);
+        // HOD and STAFF can update batches in their department
+        $user = AuthMiddleware::requireRole(['HOD', 'STAFF']);
         
         $input = json_decode(file_get_contents('php://input'), true);
         
@@ -177,7 +218,7 @@ class BatchController {
     }
     
     public function destroy($batchId) {
-        // HOD can delete batches if no students are associated
+        // Only HOD can delete batches in their department
         $user = AuthMiddleware::requireRole(['HOD']);
         
         try {

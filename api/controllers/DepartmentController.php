@@ -12,8 +12,8 @@ class DepartmentController {
     }
     
     public function index() {
-        // Only admin can view all departments
-        $user = AuthMiddleware::requireRole(['ADMIN']);
+        // Any authenticated user can view all departments
+        $user = AuthMiddleware::requireAuth();
         
         try {
             $stmt = $this->db->prepare('
@@ -123,8 +123,8 @@ class DepartmentController {
     }
     
     public function show($departmentId) {
-        // Only admin can view specific department details
-        $user = AuthMiddleware::requireRole(['ADMIN']);
+        // Any authenticated user can view specific department details
+        $user = AuthMiddleware::requireAuth();
         
         try {
             $stmt = $this->db->prepare('

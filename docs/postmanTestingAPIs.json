@@ -1,8 +1,8 @@
 {
   "info": {
     "_postman_id": "sms-api-test-collection",
-    "name": "SMS - Student Monitoring System API",
-    "description": "Complete API testing collection for SMS with all endpoints including Admin, HOD, Faculty, and Student operations",
+    "name": "SMS API",
+    "description": "Complete API testing collection for SMS with all endpoints.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "auth": {
@@ -44,6 +44,61 @@
     {
       "key": "hod_password",
       "value": "adminpass",
+      "type": "string"
+    },
+    {
+      "key": "faculty_email",
+      "value": "faculty.cse@gmail.com",
+      "type": "string"
+    },
+    {
+      "key": "faculty_password",
+      "value": "adminpass",
+      "type": "string"
+    },
+    {
+      "key": "staff_email",
+      "value": "staff.cse@gmail.com",
+      "type": "string"
+    },
+    {
+      "key": "staff_password",
+      "value": "adminpass",
+      "type": "string"
+    },
+    {
+      "key": "student_email",
+      "value": "student.cse@gmail.com",
+      "type": "string"
+    },
+    {
+      "key": "student_password",
+      "value": "adminpass",
+      "type": "string"
+    },
+    {
+      "key": "new_department_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "new_degree_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "new_user_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "new_programme_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "new_batch_id",
+      "value": "",
       "type": "string"
     }
   ],
@@ -130,6 +185,132 @@
             "body": {
               "mode": "raw",
               "raw": "{\n    \"email\": \"{{hod_email}}\",\n    \"password\": \"{{hod_password}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Faculty Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.collectionVariables.set(\"jwt_token\", responseJson.token);",
+                  "    pm.test(\"Faculty Login successful\", function () {",
+                  "        pm.expect(responseJson.token).to.not.be.undefined;",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"{{faculty_email}}\",\n    \"password\": \"{{faculty_password}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Staff Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.collectionVariables.set(\"jwt_token\", responseJson.token);",
+                  "    pm.test(\"Staff Login successful\", function () {",
+                  "        pm.expect(responseJson.token).to.not.be.undefined;",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"{{staff_email}}\",\n    \"password\": \"{{staff_password}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Student Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.collectionVariables.set(\"jwt_token\", responseJson.token);",
+                  "    pm.test(\"Student Login successful\", function () {",
+                  "        pm.expect(responseJson.token).to.not.be.undefined;",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"{{student_email}}\",\n    \"password\": \"{{student_password}}\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/auth/login",
@@ -363,7 +544,132 @@
       ]
     },
     {
-      "name": "User Management (HOD Only)",
+      "name": "Degree Management",
+      "item": [
+        {
+          "name": "Get All Degrees",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/degrees",
+              "host": ["{{base_url}}"],
+              "path": ["degrees"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Degree by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/degrees/1",
+              "host": ["{{base_url}}"],
+              "path": ["degrees", "1"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Degree (HOD Only)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.collectionVariables.set(\"new_degree_id\", responseJson.degree_level_id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"level_name\": \"Professional Diploma\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/degrees",
+              "host": ["{{base_url}}"],
+              "path": ["degrees"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Degree (HOD Only)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"level_name\": \"Updated Professional Diploma\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/degrees/{{new_degree_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["degrees", "{{new_degree_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Degree (HOD Only)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/degrees/{{new_degree_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["degrees", "{{new_degree_id}}"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "User Management (Enhanced)",
       "item": [
         {
           "name": "Get All Users",
@@ -379,6 +685,150 @@
               "raw": "{{base_url}}/users",
               "host": ["{{base_url}}"],
               "path": ["users"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Users by Type (Students)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/users?type=STUDENT",
+              "host": ["{{base_url}}"],
+              "path": ["users"],
+              "query": [
+                {
+                  "key": "type",
+                  "value": "STUDENT"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Users by Type (Faculty)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/users?type=FACULTY",
+              "host": ["{{base_url}}"],
+              "path": ["users"],
+              "query": [
+                {
+                  "key": "type",
+                  "value": "FACULTY"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get User by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/users/5",
+              "host": ["{{base_url}}"],
+              "path": ["users", "5"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Find User by Roll Number",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"roll_number\": \"CSE2020001\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/users/find",
+              "host": ["{{base_url}}"],
+              "path": ["users", "find"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Find User by Email",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"student.cse@gmail.com\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/users/find",
+              "host": ["{{base_url}}"],
+              "path": ["users", "find"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Find User by Both",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"roll_number\": \"CSE2020001\",\n    \"email\": \"student.cse@gmail.com\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/users/find",
+              "host": ["{{base_url}}"],
+              "path": ["users", "find"]
             }
           },
           "response": []
@@ -450,7 +900,7 @@
           "response": []
         },
         {
-          "name": "Update User",
+          "name": "Update User Profile",
           "request": {
             "method": "PUT",
             "header": [
@@ -465,7 +915,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"full_name\": \"Updated Faculty Name\",\n    \"user_type\": \"FACULTY\"\n}"
+              "raw": "{\n    \"full_name\": \"Updated Faculty Name\",\n    \"email\": \"updated.faculty@gmail.com\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/users/{{new_user_id}}",
@@ -476,7 +926,33 @@
           "response": []
         },
         {
-          "name": "Activate Users",
+          "name": "Update User with Password Reset",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"full_name\": \"Updated Faculty Name\",\n    \"reset_password\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/users/{{new_user_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["users", "{{new_user_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Bulk Activate Users",
           "request": {
             "method": "PUT",
             "header": [
@@ -502,6 +978,68 @@
           "response": []
         },
         {
+          "name": "Bulk Deactivate Users",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"user_ids\": [5, 6, 7]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/users/deactivate",
+              "host": ["{{base_url}}"],
+              "path": ["users", "deactivate"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Activate Single User",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/users/5/activate",
+              "host": ["{{base_url}}"],
+              "path": ["users", "5", "activate"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Deactivate Single User",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/users/5/deactivate",
+              "host": ["{{base_url}}"],
+              "path": ["users", "5", "deactivate"]
+            }
+          },
+          "response": []
+        },
+        {
           "name": "Delete User",
           "request": {
             "method": "DELETE",
@@ -522,10 +1060,10 @@
       ]
     },
     {
-      "name": "Programme Management (HOD Only)",
+      "name": "Programme Management (Department-Specific)",
       "item": [
         {
-          "name": "Get All Programmes",
+          "name": "Get All Programmes (Department Users)",
           "request": {
             "method": "GET",
             "header": [
@@ -543,7 +1081,25 @@
           "response": []
         },
         {
-          "name": "Create Programme",
+          "name": "Get Programme by ID (Department Users)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/programmes/1",
+              "host": ["{{base_url}}"],
+              "path": ["programmes", "1"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Programme (HOD Only)",
           "event": [
             {
               "listen": "test",
@@ -583,7 +1139,7 @@
           "response": []
         },
         {
-          "name": "Update Programme",
+          "name": "Update Programme (HOD Only)",
           "request": {
             "method": "PUT",
             "header": [
@@ -598,7 +1154,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"is_active\": false\n}"
+              "raw": "{\n    \"programme_name\": \"Updated PhD Computer Science\",\n    \"is_active\": false\n}"
             },
             "url": {
               "raw": "{{base_url}}/programmes/{{new_programme_id}}",
@@ -609,7 +1165,7 @@
           "response": []
         },
         {
-          "name": "Delete Programme",
+          "name": "Delete Programme (HOD Only)",
           "request": {
             "method": "DELETE",
             "header": [
@@ -629,10 +1185,10 @@
       ]
     },
     {
-      "name": "Batch Management (HOD Only)",
+      "name": "Batch Management (Department-Specific)",
       "item": [
         {
-          "name": "Get All Batches",
+          "name": "Get All Batches (Department Users)",
           "request": {
             "method": "GET",
             "header": [
@@ -650,7 +1206,25 @@
           "response": []
         },
         {
-          "name": "Create Batch",
+          "name": "Get Batch by ID (Department Users)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/batches/1",
+              "host": ["{{base_url}}"],
+              "path": ["batches", "1"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Batch (HOD, Staff Only)",
           "event": [
             {
               "listen": "test",
@@ -690,7 +1264,7 @@
           "response": []
         },
         {
-          "name": "Update Batch",
+          "name": "Update Batch (HOD, Staff Only)",
           "request": {
             "method": "PUT",
             "header": [
@@ -705,7 +1279,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"is_active\": false\n}"
+              "raw": "{\n    \"batch_name\": \"Updated 2024 Autumn Batch\",\n    \"is_active\": false\n}"
             },
             "url": {
               "raw": "{{base_url}}/batches/{{new_batch_id}}",
@@ -716,7 +1290,7 @@
           "response": []
         },
         {
-          "name": "Delete Batch",
+          "name": "Delete Batch (HOD Only)",
           "request": {
             "method": "DELETE",
             "header": [

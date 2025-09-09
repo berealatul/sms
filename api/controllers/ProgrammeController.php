@@ -12,16 +12,24 @@ class ProgrammeController {
     }
     
     public function index() {
-        // HOD can view programmes in their department
-        $user = AuthMiddleware::requireRole(['HOD']);
+        // Any authenticated user from department can view programmes
+        $user = AuthMiddleware::requireAuth();
+        
+        // Admin has no department, so deny access
+        if ($user['user_type'] === 'ADMIN') {
+            Response::error('Admin users cannot access department programmes', 403);
+        }
         
         try {
             $stmt = $this->db->prepare('
                 SELECT p.programme_id, p.programme_name, p.minimum_duration_years, 
-                       p.maximum_duration_years, p.is_active, dl.level_name 
+                       p.maximum_duration_years, p.is_active,
+                       dl.level_name as degree_level,
+                       d.department_code, d.department_name
                 FROM programmes p 
-                JOIN degree_levels dl ON p.degree_level_id = dl.degree_level_id 
-                WHERE p.department_id = ? 
+                LEFT JOIN degree_levels dl ON p.degree_level_id = dl.degree_level_id
+                LEFT JOIN departments d ON p.department_id = d.department_id
+                WHERE p.department_id = ?
                 ORDER BY p.programme_name
             ');
             $stmt->execute([$user['department_id']]);
@@ -32,6 +40,41 @@ class ProgrammeController {
         } catch (Exception $e) {
             error_log("Get programmes error: " . $e->getMessage());
             Response::error('Failed to retrieve programmes', 500);
+        }
+    }
+
+    public function show($programmeId) {
+        // Any authenticated user from department can view specific programme
+        $user = AuthMiddleware::requireAuth();
+        
+        // Admin has no department, so deny access
+        if ($user['user_type'] === 'ADMIN') {
+            Response::error('Admin users cannot access department programmes', 403);
+        }
+        
+        try {
+            $stmt = $this->db->prepare('
+                SELECT p.programme_id, p.programme_name, p.minimum_duration_years, 
+                       p.maximum_duration_years, p.is_active,
+                       dl.level_name as degree_level, dl.degree_level_id,
+                       d.department_code, d.department_name
+                FROM programmes p 
+                LEFT JOIN degree_levels dl ON p.degree_level_id = dl.degree_level_id
+                LEFT JOIN departments d ON p.department_id = d.department_id
+                WHERE p.programme_id = ? AND p.department_id = ?
+            ');
+            $stmt->execute([$programmeId, $user['department_id']]);
+            $programme = $stmt->fetch();
+            
+            if (!$programme) {
+                Response::error('Programme not found in your department', 404);
+            }
+            
+            Response::send($programme);
+            
+        } catch (Exception $e) {
+            error_log("Get programme error: " . $e->getMessage());
+            Response::error('Failed to retrieve programme', 500);
         }
     }
     
